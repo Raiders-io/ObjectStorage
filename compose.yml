@@ -1,0 +1,25 @@
+services:
+## Object Storage
+  object-storage:
+    container_name: object-storage
+    build: 
+      context: ./ObjectStorage
+    environment:
+      - PORT=${PORT:?}
+      - HOST=${HOST:?}
+      - LOG_LEVEL=${LOG_LEVEL:?}
+      - APP_KEY=${APP_KEY:?}
+      - APP_URL=${APP_URL:?}
+      - SESSION_DRIVER=${SESSION_DRIVER:?}
+    networks:
+      - basic-network
+    ports:
+      - "3333:${OBJECT_STORAGE_PORT:?}" #default port is 3333
+    volumes:
+      - ./ObjectStorage/tmp:/app/tmp # WIP DB is stored in tmp now
+    restart: always
+
+networks:
+  basic-network:
+    driver: bridge
+    internal: false
