@@ -47,6 +47,10 @@ router.group(() => {
 .prefix('/storage')
 .as('storage')
 
+// Resources : register automatically the CRUD routes for a resource controller (index, create, store, show, edit, update, destroy)
+// apiOnly : register only the API routes (index, store, show, update, destroy)
+// router.resource('access-objects', 'AccessObjectsController').as('storage').apiOnly().middleware('*', middleware.auth())
+
 // TODO: Auth routes are handled by another service
 router
   .group(() => {
