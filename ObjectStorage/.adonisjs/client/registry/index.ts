@@ -6,6 +6,36 @@ import type { ApiDefinition } from './tree.d.ts'
 const placeholder: any = {}
 
 const routes = {
+  'storage.objects.listObjects': {
+    methods: ["GET","HEAD"],
+    pattern: '/storage/objects',
+    tokens: [{"old":"/storage/objects","type":0,"val":"storage","end":""},{"old":"/storage/objects","type":0,"val":"objects","end":""}],
+    types: placeholder as Registry['storage.objects.listObjects']['types'],
+  },
+  'storage.objects.createObject': {
+    methods: ["POST"],
+    pattern: '/storage/objects',
+    tokens: [{"old":"/storage/objects","type":0,"val":"storage","end":""},{"old":"/storage/objects","type":0,"val":"objects","end":""}],
+    types: placeholder as Registry['storage.objects.createObject']['types'],
+  },
+  'storage.objects.getObject': {
+    methods: ["GET","HEAD"],
+    pattern: '/storage/objects/:id',
+    tokens: [{"old":"/storage/objects/:id","type":0,"val":"storage","end":""},{"old":"/storage/objects/:id","type":0,"val":"objects","end":""},{"old":"/storage/objects/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['storage.objects.getObject']['types'],
+  },
+  'storage.objects.updateObject': {
+    methods: ["PUT"],
+    pattern: '/storage/objects/:id',
+    tokens: [{"old":"/storage/objects/:id","type":0,"val":"storage","end":""},{"old":"/storage/objects/:id","type":0,"val":"objects","end":""},{"old":"/storage/objects/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['storage.objects.updateObject']['types'],
+  },
+  'storage.objects.deleteObject': {
+    methods: ["DELETE"],
+    pattern: '/storage/objects/:id',
+    tokens: [{"old":"/storage/objects/:id","type":0,"val":"storage","end":""},{"old":"/storage/objects/:id","type":0,"val":"objects","end":""},{"old":"/storage/objects/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['storage.objects.deleteObject']['types'],
+  },
   'auth.new_account.store': {
     methods: ["POST"],
     pattern: '/api/v1/auth/signup',

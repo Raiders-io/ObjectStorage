@@ -17,14 +17,25 @@ COPY . .
 RUN node ace build
 
 # ----------------------------
-# Stage 3: Production runtime
+#	Bypass the clean install stage for development
 # ----------------------------
-FROM base AS production
+FROM build AS dev
 WORKDIR /app
-ENV NODE_ENV=production
-
+ENV NODE_ENV=development
 COPY --from=build /app/build ./
-RUN npm ci --omit=dev
 
 EXPOSE 3333
 CMD ["node", "bin/server.js"]
+
+# ----------------------------
+# Stage 3: Production runtime
+# ----------------------------
+# FROM base AS production
+# WORKDIR /app
+# ENV NODE_ENV=production
+
+# COPY --from=build /app/build ./
+# RUN npm ci --omit=dev
+
+# EXPOSE 3333
+# CMD ["node", "bin/server.js"]

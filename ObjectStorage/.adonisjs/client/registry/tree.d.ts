@@ -2,6 +2,15 @@
 import type { routes } from './index.ts'
 
 export interface ApiDefinition {
+  storage: {
+    objects: {
+      listObjects: typeof routes['storage.objects.listObjects']
+      createObject: typeof routes['storage.objects.createObject']
+      getObject: typeof routes['storage.objects.getObject']
+      updateObject: typeof routes['storage.objects.updateObject']
+      deleteObject: typeof routes['storage.objects.deleteObject']
+    }
+  }
   auth: {
     newAccount: {
       store: typeof routes['auth.new_account.store']

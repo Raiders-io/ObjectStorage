@@ -1,40 +1,37 @@
 # Routes
 
+See the [ROUTES-AUTH.md](ROUTES-AUTH.md) file for documentation on auth (will be deleted).
+
 Rules:
 
-- `/api/v1` : prefix for all API routes
-- `/auth` : prefix for authentication related routes (signup, login)
-- `/account` : prefix for account related routes (profile, logout) with auth middleware
+- `/storage` : prefix for all API routes
+- `/objects` : prefix for manipulating objects
 
 Routes:
 
 - POST `/api/v1/auth/signup` : user registration
-- POST `/api/v1/auth/login` : user login
-- GET `/api/v1/account/profile` : fetching user profile (requires authentication)
-- POST `/api/v1/account/logout` : logging out the user (requires authentication)
 
-### GET /
+## GET /
 
-`GET /`
+`GET /storage/objects`
 
 Expected output:
 
 ```json
-{ hello: 'world' }
+{
+  "objects": []
+}
 ```
 
-### POST `/api/v1/auth/signup`
+### POST `/storage/objects`
 
-`POST /api/v1/auth/signup`
+`POST /storage/objects`
 
 Expected input:
 
 ```json
 {
-  "fullName": "test",
-  "email": "test@test.test",
-  "password": "password",
-  "passwordConfirmation": "password"
+  [...] WIP
 }
 ```
 
@@ -42,110 +39,59 @@ Expected output:
 
 ```json
 {
-  "fullName": "test",
-  "email": "test@test.test",
-  "password": "password",
-  "passwordConfirmation": "password"
+  [...] WIP
 }
 ```
 
+### GET `/storage/objects/:id`
 
-### POST `/api/v1/auth/login`
+`GET /storage/objects/:id`
 
-`POST /api/v1/auth/login`
+Expected input:
 
-Expected Body input:
-
-```json
-{
-  "fullName": "test",
-  "email": "test@test.test",
-  "password": "password",
-  "passwordConfirmation": "password"
-}
-```
+- `id` : filename or hashed filename
 
 Expected output:
 
 ```json
 {
-  "data": {
-    "token": "[token]",
-    "user": {
-      "id": 1,
-      "fullName": "test",
-      "email": "test@test.test",
-      "createdAt": "2026-05-09T16:10:35.000+00:00",
-      "updatedAt": "2026-05-09T16:10:35.000+00:00",
-      "initials": "TE"
-    }
+  "object": {
+    "id": "test",
+    "name": "Example Object",
+    "size": 1024
   }
 }
 ```
 
-### POST `/api/v1/account/logout`
+### PUT `/storage/objects/:id`
 
-`POST /api/v1/account/logout`
+`PUT /storage/objects/:id`
 
-Expected Header input:
+Expected input:
 
-```HTML
-Authorization: Bearer [token]
-```
+- `id` : filename or hashed filename
 
 Expected output:
 
 ```json
 {
-  "message": "Logged out successfully"
+  "message": "Object with id test updated successfully"
 }
 ```
 
-Possible error:
 
-```json
-{
-  "errors": [
-    {
-      "message": "Unauthorized access"
-    }
-  ]
-}
-```
+### DELETE `/storage/objects/:id`
 
-### GET `/api/v1/account/profile`
+`DELETE /storage/objects/:id`
 
-`GET /api/v1/account/profile`
+Expected input:
 
-Expected Header input:
-
-```HTML
-Authorization: Bearer [token]
-```
+- `id` : filename or hashed filename
 
 Expected output:
 
 ```json
 {
-  "data": {
-    "id": 1,
-    "fullName": "test",
-    "email": "test@test.test",
-    "createdAt": "2026-05-09T16:10:35.000+00:00",
-    "updatedAt": "2026-05-09T16:10:35.000+00:00",
-    "initials": "TE"
-  }
-}
-```
-
-### Possible errors
-
-```json
-{
-  "errors": [
-    {
-      "message": "Unauthorized access"
-    }
-  ]
+  "message": "Object with id test deleted successfully"
 }
 ```
