@@ -22,10 +22,14 @@ RUN node ace build
 FROM build AS dev
 WORKDIR /app
 ENV NODE_ENV=development
+
 COPY --from=build /app/build ./
+COPY ./startup.sh /
 
 EXPOSE 3333
-CMD ["node", "bin/server.js"]
+
+CMD ["bash", "/startup.sh"]
+# CMD ["node", "bin/server.js"]
 
 # ----------------------------
 # Stage 3: Production runtime
@@ -39,3 +43,4 @@ CMD ["node", "bin/server.js"]
 
 # EXPOSE 3333
 # CMD ["node", "bin/server.js"]
+# CMD ["./startup.sh"]
