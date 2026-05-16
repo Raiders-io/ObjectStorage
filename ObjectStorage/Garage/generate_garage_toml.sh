@@ -1,3 +1,5 @@
+#!/bin/sh
+
 cat > garage.toml <<EOF
 metadata_dir = "/tmp/meta"
 data_dir = "/tmp/data"
