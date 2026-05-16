@@ -1,5 +1,5 @@
 services:
-## Object Storage
+# Object Storage
   api-object-storage:
     container_name: api-object-storage
     build: 
@@ -11,6 +11,12 @@ services:
       - APP_KEY=${APP_KEY:?}
       - APP_URL=${APP_URL:?}
       - SESSION_DRIVER=${SESSION_DRIVER:?}
+      - DRIVE_DISK=${DRIVE_DISK:?}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?}
+      - AWS_REGION=${AWS_REGION:?}
+      - S3_BUCKET=${S3_BUCKET:?}
+      - S3_ENDPOINT=${S3_ENDPOINT:?}
     networks:
       - basic-network
     ports:
@@ -34,6 +40,19 @@ services:
     volumes:
       - ./garage-data:/var/lib/garage/data #TODO : Should be placed elsewhere in production, and should be a named volume
       - ./ObjectStorage/Garage/garage.toml:/etc/garage.toml #Needs to be generated with generate_garage_toml.sh
+    networks:
+      - basic-network
+    restart: unless-stopped
+
+  postgresql:
+    container_name: postgresql
+    image: postgres:18.4-alpine3.23
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:?}
+      - POSTGRES_USER=${POSTGRES_USER:?}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+    volumes:
+      - ./postgresql-data:/var/lib/postgresql/18/docker #TODO : Should be placed elsewhere in production, and should be a named volume
     networks:
       - basic-network
     restart: unless-stopped

@@ -11,7 +11,7 @@
 |
 */
 
-import { DateTime } from '../node_modules/@types/luxon/index.js'
+import { DateTime } from 'luxon'
 import { VineDate } from '@vinejs/vine'
 
 declare module '@vinejs/vine/types' {

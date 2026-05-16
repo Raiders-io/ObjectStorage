@@ -33,3 +33,6 @@ garage-data
 # Ignore AWS CLI credentials file, which may contain real credentials
 .aws/credentials
 .awsrc
+
+# PostgreSQL Specific
+postgresql-data
