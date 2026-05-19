@@ -2,8 +2,9 @@ services:
 # Object Storage
   api-object-storage:
     container_name: api-object-storage
-    build: 
+    build:
       context: ./API-ObjectStorage
+    image: api-object-storage
     environment:
       - API_PORT=${API_PORT:?}
       - HOST=${HOST:?}
