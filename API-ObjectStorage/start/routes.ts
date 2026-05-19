@@ -61,6 +61,7 @@ router
       })
       .prefix('auth')
       .as('auth')
+      .use(middleware.guest())
 
     router
       .group(() => {
