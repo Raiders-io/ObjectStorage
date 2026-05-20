@@ -24,3 +24,14 @@ export const loginValidator = vine.create({
   email: email(),
   password: vine.string(),
 })
+
+/**
+ * Validator to use before validating a avatar for a user 
+ * during profile creation or avatar profile update
+ */
+export const AvatarValidator = vine.create({
+  avatar: vine.file({
+    size: '2mb',
+    extnames: ['jpg', 'png', 'jpeg', 'webp'],
+  })
+})
