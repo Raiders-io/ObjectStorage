@@ -33,8 +33,6 @@ services:
       - basic-network
     ports:
       - "3333:${API_PORT:?}" #default port is 3333
-    volumes:
-      - ./API-ObjectStorage/tmp:/app/tmp # WIP DB is stored in tmp now
     restart: always
 
   garage:

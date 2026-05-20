@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Object Storage API</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./style/index.css">
+</head>
+<body>
+<h1>Object Storage API</h1>
+
+<h2>Object Storage API - Login</h2>
+  <!-- Formulaire de login -->
+  <form id="loginForm">
+	<div class="container">
+		<label for="email"><b>Email</b></label>
+		<input type="text" placeholder="Enter Email" name="email" required><br>
+		
+		<label for="password"><b>Password</b></label>
+		<input type="password" placeholder="Enter Password" name="password" required><br>
+		
+		<label>
+			<input type="checkbox" checked="checked" name="remember"> Remember me
+		</label><br>
+		
+		<button type="submit">Login</button>
+	</div>
+  </form>
+
+<h2>Object Storage API - Upload Avatar</h2>
+  <!-- Formulaire d'upload d'avatar -->
+  <form id="avatarForm" enctype="multipart/form-data">
+	<div>
+	  <label for="file">Choose file to upload</label><br>
+	  <input type="file" id="file" name="file" multiple />
+	</div><br>
+	<div>
+	  <button type="submit">Submit</button>
+	</div>
+  </form>
+
+  <script>
+	let authToken = null;
+
+	// Login
+	document.getElementById('loginForm').addEventListener('submit', async (e) => {
+	  e.preventDefault();
+	  const form = e.target;
+
+	  const res = await fetch('http://127.0.0.1:3333/api/v1/auth/login', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+		  email: form.email.value,
+		  password: form.password.value,
+		}),
+	  });
+
+	  const json = await res.json();
+	  authToken = json.data.token;
+	  console.log('Token récupéré :', authToken);
+	  alert('Connected! You can now upload your avatar.');
+	});
+
+	// Upload avatar
+	document.getElementById('avatarForm').addEventListener('submit', async (e) => {
+	  e.preventDefault();
+
+	  if (!authToken) {
+		alert('Please login first !');
+		return;
+	  }
+
+	  const formData = new FormData();
+	  const fileInput = document.getElementById('file');
+	  for (const file of fileInput.files) {
+		formData.append('avatar', file);
+	  }
+
+	  const res = await fetch('http://127.0.0.1:3333/profile/avatar', {
+		method: 'POST',
+		headers: {
+		  'Authorization': `Bearer ${authToken}`,
+		  // pas de Content-Type ici : fetch le gère automatiquement pour multi-part
+		},
+		body: formData,
+	  });
+
+	  const json = await res.text();
+	  console.log('Response upload :', json);
+	});
+  </script>
+
+</body>
+</html>
