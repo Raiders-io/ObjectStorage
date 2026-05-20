@@ -4,6 +4,7 @@ services:
     container_name: api-object-storage
     build:
       context: ./API-ObjectStorage
+      # dockerfile: Dockerfile_prod #DISABLE for dev
     image: api-object-storage
     environment:
       - API_PORT=${API_PORT:?}

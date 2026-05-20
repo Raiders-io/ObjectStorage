@@ -17,16 +17,17 @@ COPY . .
 RUN node ace build
 
 # ----------------------------
-# Stage 3: Development runtime
+# Stage 3: Production runtime
 # ----------------------------
-FROM build AS dev
+FROM base AS production
 WORKDIR /app
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 
 COPY ./startup.sh /
 RUN chmod +x /startup.sh
 
 COPY --from=build /app/build ./
+RUN npm ci --omit=dev
 
 EXPOSE 3333
 
