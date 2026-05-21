@@ -7,6 +7,18 @@ import type { InferInput, SimpleError } from '@vinejs/vine/types'
 export type ParamValue = string | number | bigint | boolean
 
 export interface Registry {
+  'updateProfileAvatar': {
+    methods: ["POST"]
+    pattern: '/profile/avatar'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/user').AvatarValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/user').AvatarValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/profile_avatars_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/profile_avatars_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'storage.objects.listObjects': {
     methods: ["GET","HEAD"]
     pattern: '/storage/objects'

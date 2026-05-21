@@ -2,6 +2,7 @@
 import type { routes } from './index.ts'
 
 export interface ApiDefinition {
+  updateProfileAvatar: typeof routes['updateProfileAvatar']
   storage: {
     objects: {
       listObjects: typeof routes['storage.objects.listObjects']

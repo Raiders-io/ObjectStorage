@@ -10,8 +10,6 @@ export default class ProfileAvatarController {
       return response.badRequest('Please upload an avatar image')
     }
     
-    console.log(avatar)
-    
     return 'Avatar uploaded successfully'
   }
 }

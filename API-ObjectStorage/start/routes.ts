@@ -17,7 +17,7 @@ router.get('/', () => {
 })
 
 // router.on('/profile').render('pages/profile').as('profile')
-router.post('/profile/avatar', [controllers.ProfileAvatars, 'update']).as('updateProfileAvatar').use(middleware.auth())
+router.post('/profile/avatar', [controllers.ProfileAvatars, 'update']).as('updateProfileAvatar').use(middleware.auth()).use(middleware.cleanupUploads()) // Add the cleanup middleware to this route
 
 // Storage service routes
 // CRUD : create, read, update, and delete

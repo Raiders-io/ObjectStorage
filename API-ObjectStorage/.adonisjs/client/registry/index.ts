@@ -6,6 +6,12 @@ import type { ApiDefinition } from './tree.d.ts'
 const placeholder: any = {}
 
 const routes = {
+  'updateProfileAvatar': {
+    methods: ["POST"],
+    pattern: '/profile/avatar',
+    tokens: [{"old":"/profile/avatar","type":0,"val":"profile","end":""},{"old":"/profile/avatar","type":0,"val":"avatar","end":""}],
+    types: placeholder as Registry['updateProfileAvatar']['types'],
+  },
   'storage.objects.listObjects': {
     methods: ["GET","HEAD"],
     pattern: '/storage/objects',

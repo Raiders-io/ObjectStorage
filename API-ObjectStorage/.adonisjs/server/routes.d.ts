@@ -4,6 +4,7 @@ type ParamValue = string | number | bigint | boolean
 
 export type ScannedRoutes = {
   ALL: {
+    'updateProfileAvatar': { paramsTuple?: []; params?: {} }
     'storage.objects.listObjects': { paramsTuple?: []; params?: {} }
     'storage.objects.createObject': { paramsTuple?: []; params?: {} }
     'storage.objects.getObject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -25,6 +26,7 @@ export type ScannedRoutes = {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   POST: {
+    'updateProfileAvatar': { paramsTuple?: []; params?: {} }
     'storage.objects.createObject': { paramsTuple?: []; params?: {} }
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_tokens.store': { paramsTuple?: []; params?: {} }

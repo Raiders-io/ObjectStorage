@@ -45,6 +45,7 @@ router.use([
  * the routes or the routes group.
  */
 export const middleware = router.named({
+  cleanupUploads: () => import('#middleware/cleanup_uploads_middleware'),
   guest: () => import('#middleware/guest_middleware'),
   auth: () => import('#middleware/auth_middleware'),
 })

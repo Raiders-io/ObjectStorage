@@ -57,6 +57,11 @@
 	  });
 
 	  const json = await res.json();
+	  if (!res.ok) {
+		console.error('Login error :', json);
+		alert('Login failed: ' + (json.message || 'Unknown error'));
+		return;
+	  }
 	  authToken = json.data.token;
 	  console.log('Token récupéré :', authToken);
 	  alert('Connected! You can now upload your avatar.');
