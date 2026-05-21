@@ -9,24 +9,16 @@ COPY package*.json ./
 RUN npm ci
 
 # ----------------------------
-# Stage 2: Build the application
+# Stage 2: Development runtime
 # ----------------------------
-FROM deps AS build
-WORKDIR /app
-COPY . .
-RUN node ace build
-
-# ----------------------------
-# Stage 3: Development runtime
-# ----------------------------
-FROM build AS dev
+FROM deps AS dev
 WORKDIR /app
 ENV NODE_ENV=development
 
 COPY ./startup.sh /
 RUN chmod +x /startup.sh
 
-COPY --from=build /app/build ./
+COPY . .
 
 EXPOSE 3333
 
