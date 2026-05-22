@@ -1,4 +1,4 @@
-FROM node:26.1.0-bookworm-slim AS base
+FROM node:24.16.0-bookworm-slim AS base
 
 # ----------------------------
 # Stage 1: Install all dependencies
