@@ -23,7 +23,7 @@ export default class CleanupUploadsMiddleware {
         const list = Array.isArray(fileOrFiles) ? fileOrFiles : [fileOrFiles]
         for (const file of list) {
           if (file?.tmpPath) {
-            console.log(`Cleaning up uploaded file: ${file.tmpPath}`)
+            // console.log(`Cleaning up uploaded file: ${file.tmpPath}`)
             await unlink(file.tmpPath).catch(() => { }) // Ignore errors during cleanup
           }
         }

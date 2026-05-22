@@ -4,7 +4,6 @@
   <title>Object Storage API</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="./style/index.css">
 </head>
 <body>
 <h1>Object Storage API</h1>
@@ -79,7 +78,7 @@
 	  const formData = new FormData();
 	  const fileInput = document.getElementById('file');
 	  for (const file of fileInput.files) {
-		formData.append('avatar', file);
+		formData.append('avatars[]', file); // avatars[] est le nom du type pour le validator
 	  }
 
 	  const res = await fetch('http://127.0.0.1:3333/profile/avatar', {
