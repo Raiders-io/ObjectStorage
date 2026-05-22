@@ -4,6 +4,7 @@ type ParamValue = string | number | bigint | boolean
 
 export type ScannedRoutes = {
   ALL: {
+    'drive.fs.serve': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'updateProfileAvatar': { paramsTuple?: []; params?: {} }
     'storage.objects.listObjects': { paramsTuple?: []; params?: {} }
     'storage.objects.createObject': { paramsTuple?: []; params?: {} }
@@ -16,11 +17,13 @@ export type ScannedRoutes = {
     'profile.access_tokens.destroy': { paramsTuple?: []; params?: {} }
   }
   GET: {
+    'drive.fs.serve': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'storage.objects.listObjects': { paramsTuple?: []; params?: {} }
     'storage.objects.getObject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
+    'drive.fs.serve': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'storage.objects.listObjects': { paramsTuple?: []; params?: {} }
     'storage.objects.getObject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }

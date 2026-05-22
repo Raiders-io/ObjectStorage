@@ -31,6 +31,9 @@ services:
        condition: service_healthy
     networks:
       - basic-network
+    volumes:
+      - ./API-ObjectStorage/tmp:/tmp # WIP DB is stored in tmp now
+      - ./API-ObjectStorage/storage:/app/storage # WIP DB is stored in tmp now
     ports:
       - "3333:${API_PORT:?}" #default port is 3333
     restart: always
