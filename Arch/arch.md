@@ -52,8 +52,9 @@ sequenceDiagram
     API_object->>API_object: Verify quota and rate limit
     API_object->>DB: Create a new entry
     deactivate DB
-    API_object->>S3: Generate a presigned URL with Quota
+    API_object->>S3: Ask to generate a presigned URL with Quota
     activate S3
+    S3->>API_object: Give presigned URL
     deactivate S3
     API_object->>Validation: Add entry to queue
     activate Validation
@@ -62,6 +63,7 @@ sequenceDiagram
         activate Validation_Worker
         User->>S3: Send file
         activate S3
+        S3->>User: OK
         deactivate S3
         User->>API_object: POST /uploads/{id}/complete
         activate API_object
@@ -69,8 +71,9 @@ sequenceDiagram
         deactivate API_object
     create participant Validation_Worker
         Validation->>Validation_Worker: Consume job
-        S3->>Validation_Worker: Download file
+        Validation_Worker->>S3: Request file
         activate S3
+        S3->>Validation_Worker: Download file
         deactivate S3
         Validation_Worker->>Validation_Worker: Validate entry
         destroy Validation_Worker
