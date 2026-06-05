@@ -1,6 +1,6 @@
 # Routes
 
-See the [ROUTES-AUTH.md](ROUTES-AUTH.md) file for documentation on auth (will be deleted).
+See the project [BrunObjectStorage](https://github.com/Raiders-io/BrunObjectStorage) for testing the API using already prepared requests. Theses routes or the ones in `BrunObjectStorage` may have different versions or not be properly updated now.
 
 Rules:
 
@@ -78,7 +78,6 @@ Expected output:
   "message": "Object with id test updated successfully"
 }
 ```
-
 
 ### DELETE `/storage/objects/:id`
 
