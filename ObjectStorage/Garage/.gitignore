@@ -1,0 +1,5 @@
+aws*
+aws.key
+aws.secret
+aws_credentials
+aws.bucket

@@ -41,8 +41,8 @@ services:
 
   garage:
     container_name: object-storage
-    image: dxflrs/garage:v2.0.0
-    command: /garage server
+    image: dxflrs/garage:v2.3.0
+    command: /garage server --single-node --default-bucket
     environment:
       - GARAGE_DEFAULT_ACCESS_KEY=${GARAGE_DEFAULT_ACCESS_KEY:?}
       - GARAGE_DEFAULT_SECRET_KEY=${GARAGE_DEFAULT_SECRET_KEY:?}
@@ -53,6 +53,7 @@ services:
       # - "3903:3903"   # Admin API
     volumes:
       - ./garage-data:/var/lib/garage/data #TODO : Should be placed elsewhere in production, and should be a named volume
+      - ./garage-meta:/var/lib/garage/meta #TODO : Should be placed elsewhere in production, and should be a named volume
       - ./ObjectStorage/Garage/garage.toml:/etc/garage.toml #Needs to be generated with generate_garage_toml.sh
     networks:
       - basic-network
