@@ -46,7 +46,9 @@ chmod +x ./generate_garage_toml.sh
 cd -
 ```
 
-### Docker network
+### Docker
+
+#### Docker network
 
 As we will be using multiple services, with their own `[docker-]compose.y[a]ml`, they all have their own networks, and a `public-network` to enable remote access for the APIs that NEED to be remotely accessible. The databases and other subsidiairies must NOT be accessible by any other means than their own APIs.
 
@@ -57,3 +59,31 @@ docker network create public-network 2>&1 | grep -q 'Error' || true
 ```
 
 The `2>&1 | grep -q 'Error' || true` part is to ignore when the network already exist.
+
+#### Docker compose
+
+To build all the apps in one go, you can simply execute this command :
+
+```sh
+docker compose up -d
+```
+
+#### Docker volumes
+
+We are using docker volumes to manage data of containers, but if you really want to use bind mounts, we advise you to use something like :
+
+To create all the directories in one command.
+
+```sh
+mkdir -p data/{postgresql,api-object-storage/{tmp,storage},garage/{data,meta}}
+```
+
+If your shell doesn't support the `{` and `}` in commands :
+
+```sh
+mkdir -p data/postgresql
+mkdir -p data/api-object-storage/tmp
+mkdir -p data/api-object-storage/storage
+mkdir -p data/garage/data
+mkdir -p data/garage/meta
+```

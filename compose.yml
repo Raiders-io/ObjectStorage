@@ -1,7 +1,7 @@
 services:
 # Object Storage
-  api-object-storage:
-    container_name: api-object-storage
+  object-api:
+    container_name: object-api
     build:
       context: ./API-ObjectStorage
       dockerfile: Dockerfile_prod #DISABLE for dev
@@ -33,8 +33,8 @@ services:
       - basic-network
       - public-network
     volumes:
-      - ./API-ObjectStorage/tmp:/tmp # WIP DB is stored in tmp now
-      - ./API-ObjectStorage/storage:/app/storage # WIP DB is stored in tmp now
+      - object-api-tmp:/tmp # WIP DB is stored in tmp now
+      - object-api-storage:/app/storage # WIP DB is stored in tmp now
     ports:
       - "3334:3333" #default port is 3333
     restart: always
@@ -52,8 +52,8 @@ services:
       # - "3900:3900"   # S3 API
       # - "3903:3903"   # Admin API
     volumes:
-      - ./garage-data:/var/lib/garage/data #TODO : Should be placed elsewhere in production, and should be a named volume
-      - ./garage-meta:/var/lib/garage/meta #TODO : Should be placed elsewhere in production, and should be a named volume
+      - object-storage-data:/var/lib/garage/data
+      - object-storage-meta:/var/lib/garage/meta
       - ./ObjectStorage/Garage/garage.toml:/etc/garage.toml #Needs to be generated with generate_garage_toml.sh
     networks:
       - basic-network
@@ -66,20 +66,20 @@ services:
     restart: unless-stopped
 
   postgresql:
-    container_name: object-postgresql
+    container_name: object-db
     image: postgres:18.4-alpine3.23
     environment:
       - POSTGRES_DB=${POSTGRES_DB:?}
       - POSTGRES_USER=${POSTGRES_USER:?}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
     volumes:
-      - ./postgresql-data:/var/lib/postgresql/18/docker #TODO : Should be placed elsewhere in production, and should be a named volume
-    ports:
-      - "5432:5432" #TODO : Expose port only in dev mode, not in production
+      - object-db-data:/var/lib/postgresql/18/docker
+    # ports:
+      # - "5432:5432" #TODO : Expose port only in dev mode, not in production
     networks:
       - basic-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-d", "${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 30s
       retries: 10
@@ -92,3 +92,11 @@ networks:
     internal: true
   public-network:
     external: true
+
+# Docker-managed named volume (no host bind). Data will be stored in Docker's volume
+volumes:
+  object-api-tmp:
+  object-api-storage:
+  object-db-data:
+  object-storage-data:
+  object-storage-meta:
