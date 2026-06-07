@@ -4,7 +4,7 @@ services:
     container_name: object-api
     build:
       context: ./API-ObjectStorage
-      dockerfile: Dockerfile_prod #DISABLE for dev
+      target: production # production or dev
     image: object-api-storage:local
     environment:
       - API_PORT=3333

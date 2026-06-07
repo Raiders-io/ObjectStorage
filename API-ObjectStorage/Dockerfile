@@ -1,18 +1,18 @@
 FROM node:24.16.0-bookworm-slim AS base
 
+WORKDIR /app
+
 # ----------------------------
-# Stage 1: Install all dependencies
+# Stage : Install all dependencies
 # ----------------------------
 FROM base AS deps
-WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
 # ----------------------------
-# Stage 2: Development runtime
+# Stage : Development runtime
 # ----------------------------
 FROM deps AS dev
-WORKDIR /app
 ENV NODE_ENV=development
 
 COPY ./startup.sh /
@@ -22,4 +22,30 @@ COPY . .
 
 EXPOSE 3333
 
-CMD ["bash", "/startup.sh"]
+ENTRYPOINT ["/startup.sh"]
+CMD ["npm", "run", "dev"]
+
+# ----------------------------
+# Stage : Build the application
+# ----------------------------
+FROM deps AS build
+COPY . .
+RUN node ace build
+
+# ----------------------------
+# Stage : Production runtime
+# ----------------------------
+FROM base AS production
+ENV NODE_ENV=production
+
+COPY ./startup.sh /
+RUN chmod +x /startup.sh
+
+COPY --from=build /app/build ./
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+EXPOSE 3333
+
+ENTRYPOINT ["/startup.sh"]
+CMD ["npm", "run", "prod"]
