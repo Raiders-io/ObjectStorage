@@ -34,6 +34,12 @@ router.group(() => {
     router.post('/', [controllers.AccessObjects, 'store'])
     .as('createObject')
 
+    router.put('/', [controllers.AccessObjects, 'updateMany'])
+    .as('bulkUpdateObjects')
+
+    router.delete('/', [controllers.AccessObjects, 'destroyMany'])
+    .as('bulkDeleteObjects')
+
     router.get('/:id', [controllers.AccessObjects, 'show'])
     .as('getObject')
 
@@ -46,13 +52,10 @@ router.group(() => {
   .prefix('/objects')
   .as('objects')
   .use(middleware.auth())
+  .use(middleware.cleanupUploads())
 })
 .prefix('/storage')
 .as('storage')
-
-// Resources : register automatically the CRUD routes for a resource controller (index, create, store, show, edit, update, destroy)
-// apiOnly : register only the API routes (index, store, show, update, destroy)
-// router.resource('access-objects', 'AccessObjectsController').as('storage').apiOnly().middleware('*', middleware.auth())
 
 // TODO: Auth routes are handled by another service
 router
