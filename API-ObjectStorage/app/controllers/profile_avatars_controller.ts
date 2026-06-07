@@ -16,9 +16,10 @@ export default class ProfileAvatarController {
 
     for (const avatar of payload.avatars) {
       const fileName = `${avatar.clientName}`
-      const path = `avatars/${auth.user.id}/${fileName}`
+      const s3Path = `avatars/${auth.user.id}/${fileName}`
       // TODO: save name to postgres
-      await avatar.moveToDisk(path) //not working now for s3
+      await avatar.moveToDisk(s3Path, 's3')
+      // console.log(`Avatar uploaded to path: ${s3Path}`)
     }
     if (payload.avatars.length === 1) {
       return 'Avatar uploaded successfully'

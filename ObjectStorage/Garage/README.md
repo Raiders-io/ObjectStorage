@@ -35,7 +35,18 @@ export AWS_SECRET_ACCESS_KEY=$(cat aws.key | grep "Secret key" | awk '{print $3}
 export AWS_DEFAULT_REGION="garage"
 garage bucket create ${BUCKET_NAME} > aws.bucket
 garage bucket allow --read --write --owner ${BUCKET_NAME} --key ${KEY_NAME}
-export AWS_ENDPOINT_URL="http://127.0.0.1:3901"
+export AWS_ENDPOINT_URL="http://127.0.0.1:3900"
+```
+
+To extract from .env :
+
+```sh
+export $(grep GARAGE_DEFAULT_ACCESS_KEY .env)
+export $(grep GARAGE_DEFAULT_SECRET_KEY .env)
+export AWS_ACCESS_KEY_ID=${GARAGE_DEFAULT_ACCESS_KEY}
+export AWS_SECRET_ACCESS_KEY=${GARAGE_DEFAULT_SECRET_KEY}
+export AWS_ENDPOINT_URL="http://127.0.0.1:3900"
+export AWS_DEFAULT_REGION="garage"
 ```
 
 > [!CAUTION]
