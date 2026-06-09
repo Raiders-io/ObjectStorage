@@ -1,7 +1,7 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 import env from '#start/env'
 
-enum storage_object_visibility {
+enum StorageObjectVisibility {
   public = 'public',
   private = 'private',
   shared = 'shared', //table for shared objects with other users (not implemented yet)
@@ -25,7 +25,7 @@ export default class extends BaseSchema {
       table.string('name').notNullable()
       table.bigInteger('size_bytes').unsigned() //up to 9 223 372 036 854 775 807 Bytes
       table.string('mime_type')
-      table.enum('visibility', Object.values(storage_object_visibility))
+      table.enum('visibility', Object.values(StorageObjectVisibility))
       table.boolean('is_verified').defaultTo(true) //TODO : implement a real file validation process to set this field to true for valid files
       table.timestamp('created_at')
       table.timestamp('updated_at')

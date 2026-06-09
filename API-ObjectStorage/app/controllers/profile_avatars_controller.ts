@@ -1,4 +1,4 @@
-import { HttpContext } from '@adonisjs/core/http'
+import { type HttpContext } from '@adonisjs/core/http'
 import { AvatarsValidator } from '#validators/user'
 // import string from '@adonisjs/core/helpers/string'
 
@@ -8,7 +8,7 @@ export default class ProfileAvatarController {
       return response.unauthorized('User must be authenticated to upload an avatar')
     }
 
-    const  payload  = await request.validateUsing(AvatarsValidator)
+    const payload = await request.validateUsing(AvatarsValidator)
 
     if (!payload || payload?.avatars?.length === 0) {
       return response.badRequest('Please upload an avatar image')
@@ -23,8 +23,7 @@ export default class ProfileAvatarController {
     }
     if (payload.avatars.length === 1) {
       return 'Avatar uploaded successfully'
-    }
-    else {
+    } else {
       return `The ${payload.avatars.length} avatars uploaded successfully`
     }
   }

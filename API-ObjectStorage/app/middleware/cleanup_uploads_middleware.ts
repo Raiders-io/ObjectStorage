@@ -13,8 +13,7 @@ export default class CleanupUploadsMiddleware {
   async handle(ctx: HttpContext, next: NextFn) {
     try {
       await next()
-    }
-    finally {
+    } finally {
       // Get all uploaded files from the request
       const files = ctx.request.allFiles()
       // Loop through each file and delete the temporary file if it exists
@@ -24,7 +23,7 @@ export default class CleanupUploadsMiddleware {
         for (const file of list) {
           if (file?.tmpPath) {
             // console.log(`Cleaning up uploaded file: ${file.tmpPath}`)
-            await unlink(file.tmpPath).catch(() => { }) // Ignore errors during cleanup
+            await unlink(file.tmpPath).catch(() => {}) // Ignore errors during cleanup
           }
         }
       }

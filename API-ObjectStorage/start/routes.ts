@@ -27,36 +27,31 @@ router.get('/', () => {
 // - Delete: DELETE /storage/objects/:id
 // - Delete: DELETE /storage/objects/ (bulk delete)
 // Only authenticated users can access these routes, but for now we will leave them open for testing purposes.
-router.group(() => {
-  router.group(() => {
-    router.get('/', [controllers.AccessObjects, 'index'])
-    .as('listObjects')
+router
+  .group(() => {
+    router
+      .group(() => {
+        router.get('/', [controllers.AccessObjects, 'index']).as('listObjects')
 
-    router.post('/', [controllers.AccessObjects, 'store'])
-    .as('createObject')
+        router.post('/', [controllers.AccessObjects, 'store']).as('createObject')
 
-    router.put('/', [controllers.AccessObjects, 'updateMany'])
-    .as('bulkUpdateObjects')
+        router.put('/', [controllers.AccessObjects, 'updateMany']).as('bulkUpdateObjects')
 
-    router.delete('/', [controllers.AccessObjects, 'destroyMany'])
-    .as('bulkDeleteObjects')
+        router.delete('/', [controllers.AccessObjects, 'destroyMany']).as('bulkDeleteObjects')
 
-    router.get('/:id', [controllers.AccessObjects, 'show'])
-    .as('getObject')
+        router.get('/:id', [controllers.AccessObjects, 'show']).as('getObject')
 
-    router.put('/:id', [controllers.AccessObjects, 'update'])
-    .as('updateObject')
+        router.put('/:id', [controllers.AccessObjects, 'update']).as('updateObject')
 
-    router.delete('/:id', [controllers.AccessObjects, 'destroy'])
-    .as('deleteObject')
+        router.delete('/:id', [controllers.AccessObjects, 'destroy']).as('deleteObject')
+      })
+      .prefix('/objects')
+      .as('objects')
+      .use(middleware.auth())
+      .use(middleware.cleanupUploads())
   })
-  .prefix('/objects')
-  .as('objects')
-  .use(middleware.auth())
-  .use(middleware.cleanupUploads())
-})
-.prefix('/storage')
-.as('storage')
+  .prefix('/storage')
+  .as('storage')
 
 // TODO: Auth routes are handled by another service
 router

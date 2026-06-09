@@ -20,7 +20,7 @@ Routes:
 Expected output:
 
 ```json
-{ hello: 'world' }
+{ "hello": "world" }
 ```
 
 ### POST `/api/v1/auth/signup`
