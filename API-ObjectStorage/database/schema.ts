@@ -32,6 +32,31 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class StorageObjectSchema extends BaseModel {
+  static $columns = ['bucket', 'createdAt', 'id', 'key', 'mimeType', 'name', 'ownerId', 'sizeBytes', 'updatedAt', 'visibility'] as const
+  $columns = StorageObjectSchema.$columns
+  @column()
+  declare bucket: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare key: string
+  @column()
+  declare mimeType: string | null
+  @column()
+  declare name: string
+  @column()
+  declare ownerId: number
+  @column()
+  declare sizeBytes: bigint | number | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare visibility: string | null
+}
+
 export class UserSchema extends BaseModel {
   static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'updatedAt'] as const
   $columns = UserSchema.$columns

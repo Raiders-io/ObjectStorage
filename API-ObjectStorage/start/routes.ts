@@ -16,15 +16,16 @@ router.get('/', () => {
   return { hello: 'world' }
 })
 
-// router.on('/profile').render('pages/profile').as('profile')
-router.post('/profile/avatar', [controllers.ProfileAvatars, 'update']).as('updateProfileAvatar').use(middleware.auth()).use(middleware.cleanupUploads()) // Add the cleanup middleware to this route
+// router.post('/profile/avatar', [controllers.ProfileAvatars, 'update']).as('updateProfileAvatar').use(middleware.auth()).use(middleware.cleanupUploads()) // Add the cleanup middleware to this route
 
 // Storage service routes
 // CRUD : create, read, update, and delete
 // - Create: POST /storage/objects
 // - Read: GET /storage/objects/:id
 // - Update: PUT /storage/objects/:id
+// - Update: PUT /storage/objects/ (bulk update)
 // - Delete: DELETE /storage/objects/:id
+// - Delete: DELETE /storage/objects/ (bulk delete)
 // Only authenticated users can access these routes, but for now we will leave them open for testing purposes.
 router.group(() => {
   router.group(() => {

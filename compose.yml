@@ -74,10 +74,11 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
     volumes:
       - object-db-data:/var/lib/postgresql/18/docker
-    # ports:
-      # - "5432:5432" #TODO : Expose port only in dev mode, not in production
+    ports:
+      - "5432:5432" #TODO : Expose port only in dev mode, not in production
     networks:
       - basic-network
+      - public-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s

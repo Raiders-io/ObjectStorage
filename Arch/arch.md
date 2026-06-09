@@ -18,6 +18,8 @@ sequenceDiagram
     participant S3@{ "type" : "database" }
     User->>API_object: POST /uploads
     activate API_object
+    API_object->>API_object: Verify Rate Limit
+    API_object->>API_object: Verify Quotas
     API_object->>DB: Create a new entry
     activate DB
     deactivate DB
@@ -46,11 +48,11 @@ sequenceDiagram
     participant Validation
     User->>API_object: POST /uploads
     activate API_object
-    API_object->>DB: Ask User info
-    activate DB
-    DB-->>API_object: User info
-    API_object->>API_object: Verify quota and rate limit
+    API_object->>API_object: Verify User Auth
+    API_object->>API_object: Verify Rate Limit
+    API_object->>API_object: Verify Quotas
     API_object->>DB: Create a new entry
+    activate DB
     deactivate DB
     API_object->>S3: Ask to generate a presigned URL with Quota
     activate S3
