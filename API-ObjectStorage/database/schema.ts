@@ -70,13 +70,13 @@ export class StorageObjectSchema extends BaseModel {
   @column()
   declare key: string
   @column()
-  declare mimeType: string | null
+  declare mimeType: string
   @column()
   declare name: string
   @column()
   declare ownerId: number
   @column()
-  declare sizeBytes: bigint | number | null
+  declare sizeBytes: bigint | number
   @column()
   declare status: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

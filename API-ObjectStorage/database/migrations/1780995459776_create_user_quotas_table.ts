@@ -26,8 +26,8 @@ export default class extends BaseSchema {
       table.bigInteger('upload_count_limit').unsigned().notNullable().defaultTo(1000) //TODO : Make this configurable per user
       table.timestamp('upload_count_reset_at') //timestamp for when the daily upload count will be reset to 0
 
-      table.timestamp('created_at')
-      table.timestamp('updated_at')
+      table.timestamp('created_at').notNullable().defaultTo(this.now())
+      table.timestamp('updated_at').notNullable().defaultTo(this.now())
     })
   }
 

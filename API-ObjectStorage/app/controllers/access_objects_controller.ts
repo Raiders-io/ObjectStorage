@@ -4,6 +4,12 @@ import drive from '@adonisjs/drive/services/main'
 import Object from '#models/object'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import db from '@adonisjs/lucid/services/db'
+import {
+  QuotaTryToUpload,
+  QuotaTryToDownload,
+  QuotaTryToUpdate,
+  QuotaTryToDelete,
+} from '#functions/quota'
 
 /**
  * Types to use when forming a response for multiple file uploads/updates/deletions,
@@ -63,6 +69,13 @@ export default class AccessObjectsController {
         continue
       }
 
+      try {
+        await QuotaTryToUpload(user.id, BigInt(file.size))
+      } catch (error) {
+        objects.push({ key: s3Path, error: (error as Error).message })
+        continue
+      }
+
       const fileSave = await db.transaction(async (trx): Promise<boolean> => {
         await Object.create(
           {
@@ -107,6 +120,12 @@ export default class AccessObjectsController {
   async show({ auth, params, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
+    try {
+      await QuotaTryToDownload(user.id)
+    } catch (error) {
+      return response.badRequest((error as Error).message)
+    }
+
     const prefix = `files/${user.id}/${params.id}` // List only files for the authenticated user
     if (
       (await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
@@ -149,6 +168,13 @@ export default class AccessObjectsController {
           updatedAt: new Date(),
         })
       })
+
+      try {
+        await QuotaTryToUpdate(user.id, BigInt(file.size))
+      } catch (error) {
+        return response.badRequest((error as Error).message)
+      }
+
       await file.moveToDisk(prefix, diskName)
     }
 
@@ -184,6 +210,13 @@ export default class AccessObjectsController {
           updatedAt: new Date(),
         })
       })
+      try {
+        await QuotaTryToUpdate(user.id, BigInt(file.size))
+      } catch (error) {
+        objects.push({ key: prefix, error: (error as Error).message })
+        continue
+      }
+
       await file.moveToDisk(prefix, diskName)
       objects.push({ key: prefix, message: 'File updated successfully' })
     }
@@ -200,15 +233,17 @@ export default class AccessObjectsController {
     const id = params.id
 
     const prefix = `files/${user.id}/${id}`
-    if (
-      !(await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
-      !(await disk.exists(prefix))
-    ) {
+    const query = await Object.query().where('owner_id', user.id).where('key', prefix).first()
+    if (!query || !(await disk.exists(prefix))) {
       return response.notFound({
         message: `Object with id ${id} not found`,
       })
     }
-
+    try {
+      await QuotaTryToDelete(user.id, BigInt(query.sizeBytes))
+    } catch (error) {
+      return response.badRequest((error as Error).message)
+    }
     await disk.delete(prefix)
     await Object.query().where('owner_id', user.id).where('key', prefix).delete()
 
@@ -230,14 +265,16 @@ export default class AccessObjectsController {
 
     for (const id of ids) {
       const prefix = `files/${user.id}/${id}`
-      if (
-        !(await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
-        !(await disk.exists(prefix))
-      ) {
+      const query = await Object.query().where('owner_id', user.id).where('key', prefix).first()
+      if (!query || !(await disk.exists(prefix))) {
         objects.push({ key: prefix, error: 'Failed to delete file' })
         continue
       }
-
+      try {
+        await QuotaTryToDelete(user.id, BigInt(query.sizeBytes))
+      } catch (error) {
+        return response.badRequest((error as Error).message)
+      }
       await disk.delete(prefix)
       await Object.query().where('owner_id', user.id).where('key', prefix).delete()
       objects.push({ key: prefix, message: 'File deleted successfully' })
