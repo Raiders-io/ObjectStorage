@@ -7,11 +7,12 @@ export interface ApiDefinition {
       serve: typeof routes['drive.fs.serve']
     }
   }
-  updateProfileAvatar: typeof routes['updateProfileAvatar']
   storage: {
     objects: {
       listObjects: typeof routes['storage.objects.listObjects']
       createObject: typeof routes['storage.objects.createObject']
+      bulkUpdateObjects: typeof routes['storage.objects.bulkUpdateObjects']
+      bulkDeleteObjects: typeof routes['storage.objects.bulkDeleteObjects']
       getObject: typeof routes['storage.objects.getObject']
       updateObject: typeof routes['storage.objects.updateObject']
       deleteObject: typeof routes['storage.objects.deleteObject']

@@ -19,18 +19,6 @@ export interface Registry {
       errorResponse: unknown
     }
   }
-  'updateProfileAvatar': {
-    methods: ["POST"]
-    pattern: '/profile/avatar'
-    types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/user').AvatarValidator)>>
-      paramsTuple: []
-      params: {}
-      query: ExtractQuery<InferInput<(typeof import('#validators/user').AvatarValidator)>>
-      response: ExtractResponse<Awaited<ReturnType<import('#controllers/profile_avatars_controller').default['update']>>>
-      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/profile_avatars_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
-    }
-  }
   'storage.objects.listObjects': {
     methods: ["GET","HEAD"]
     pattern: '/storage/objects'
@@ -47,12 +35,36 @@ export interface Registry {
     methods: ["POST"]
     pattern: '/storage/objects'
     types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/file').FilesValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/file').FilesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'storage.objects.bulkUpdateObjects': {
+    methods: ["PUT"]
+    pattern: '/storage/objects'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/file').FilesValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/file').FilesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['updateMany']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['updateMany']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'storage.objects.bulkDeleteObjects': {
+    methods: ["DELETE"]
+    pattern: '/storage/objects'
+    types: {
       body: {}
       paramsTuple: []
       params: {}
       query: {}
-      response: ExtractResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['store']>>>
-      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['store']>>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['destroyMany']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['destroyMany']>>>
     }
   }
   'storage.objects.getObject': {
@@ -71,12 +83,12 @@ export interface Registry {
     methods: ["PUT"]
     pattern: '/storage/objects/:id'
     types: {
-      body: {}
+      body: ExtractBody<InferInput<(typeof import('#validators/file').FilesValidator)>>
       paramsTuple: [ParamValue]
       params: { id: ParamValue }
-      query: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/file').FilesValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['update']>>>
-      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_objects_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'storage.objects.deleteObject': {

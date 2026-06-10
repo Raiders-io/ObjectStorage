@@ -20,8 +20,6 @@ RUN chmod +x /startup.sh
 
 COPY . .
 
-EXPOSE 3333
-
 ENTRYPOINT ["/startup.sh"]
 CMD ["npm", "run", "dev"]
 
@@ -44,8 +42,6 @@ RUN chmod +x /startup.sh
 COPY --from=build /app/build ./
 COPY package*.json ./
 RUN npm ci --omit=dev
-
-EXPOSE 3333
 
 ENTRYPOINT ["/startup.sh"]
 CMD ["npm", "run", "prod"]

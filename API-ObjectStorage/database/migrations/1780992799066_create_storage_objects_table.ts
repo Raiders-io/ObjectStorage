@@ -1,11 +1,6 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 import env from '#start/env'
-
-enum StorageObjectVisibility {
-  public = 'public',
-  private = 'private',
-  shared = 'shared', //table for shared objects with other users (not implemented yet)
-}
+import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 
 export default class extends BaseSchema {
   protected tableName = 'storage_objects'
@@ -23,9 +18,16 @@ export default class extends BaseSchema {
       table.string('key').notNullable().unique()
       table.string('bucket').notNullable().defaultTo(env.get('S3_BUCKET'))
       table.string('name').notNullable()
-      table.bigInteger('size_bytes').unsigned() //up to 9 223 372 036 854 775 807 Bytes
-      table.string('mime_type')
-      table.enum('visibility', Object.values(StorageObjectVisibility))
+      table.bigInteger('size_bytes').unsigned().notNullable() //up to 9 223 372 036 854 775 807 Bytes
+      table.string('mime_type').notNullable()
+      table
+        .enum('visibility', Object.values(StorageObjectVisibility))
+        .notNullable()
+        .defaultTo(StorageObjectVisibility.private)
+      table
+        .enum('status', Object.values(StorageObjectUploadStatus))
+        .notNullable()
+        .defaultTo(StorageObjectUploadStatus.not_started)
       table.boolean('is_verified').defaultTo(true) //TODO : implement a real file validation process to set this field to true for valid files
       table.timestamp('created_at')
       table.timestamp('updated_at')

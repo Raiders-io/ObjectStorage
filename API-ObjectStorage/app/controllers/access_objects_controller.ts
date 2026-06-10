@@ -2,7 +2,23 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { FilesValidator } from '#validators/file'
 import drive from '@adonisjs/drive/services/main'
 import Object from '#models/object'
+import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import db from '@adonisjs/lucid/services/db'
+
+/**
+ * Types to use when forming a response for multiple file uploads/updates/deletions,
+ * to provide feedback on which files were successfully processed
+ * and which ones failed with the corresponding error message
+ * */
+type ObjectError = {
+  key: string // S3 path of the object
+  error: string
+}
+
+type ObjectSuccess = {
+  key: string // S3 path of the object
+  message: string
+}
 
 const diskName = 's3'
 const disk = drive.use(diskName)
@@ -11,28 +27,14 @@ export default class AccessObjectsController {
   async index({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const response = await Object.query()
-      .where('owner_id', user.id)
-      .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
-    return response
-    // const prefix = `files/${user.id}/` // List only files for the authenticated user
-    // const response = await disk.listAll(prefix)
-    /**
-     * Loop over the "objects" property, which is an "Iterator".
-     * Each item in the list can be an instance of "DriveFile"
-     * or "DriveDirectory"
-     */
-    // let objects: Array<{ isFile: boolean, key?: string, prefix?: string }> = []
-    // for (let item of response.objects) {
-    // 	if (item.isFile) {
-    // 		objects.push({ isFile: true , key: item.key })
-    // 	} else {
-    // 		objects.push({ isFile: false, prefix: item.prefix })
-    // 	}
-    // }
-    // return {
-    // 	objects: objects,
-    // }
+    try {
+      const response = await Object.query()
+        .where('owner_id', user.id)
+        .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
+      return { message: 'Objects fetched successfully', objects: response }
+    } catch (error) {
+      return { error: 'Failed to fetch objects' }
+    }
   }
 
   async store({ auth, request, response }: HttpContext) {
@@ -44,7 +46,7 @@ export default class AccessObjectsController {
       return response.badRequest('Please upload a file')
     }
 
-    let objects = []
+    let objects: (ObjectError | ObjectSuccess)[] = []
 
     for (const file of payload.files) {
       const fileName = `${file.clientName}`
@@ -69,20 +71,32 @@ export default class AccessObjectsController {
             name: fileName,
             sizeBytes: file.size,
             mimeType: file.type,
-            visibility: 'private',
+            visibility: StorageObjectVisibility.private,
+            status: StorageObjectUploadStatus.uploading,
           },
           { client: trx }
         )
-        // object.save()
-        await file.moveToDisk(s3Path, diskName)
         return true
       })
       if (!fileSave) {
         objects.push({ key: s3Path, error: 'Failed to save file' })
-      } else {
-        objects.push({ key: s3Path, message: 'File uploaded successfully' })
+        continue
       }
-      // console.log(`File uploaded to path: ${s3Path}`)
+      try {
+        await file.moveToDisk(s3Path, diskName)
+        await db.transaction(async () => {
+          Object.query().where('owner_id', user.id).where('key', s3Path).update({
+            status: StorageObjectUploadStatus.complete,
+          })
+        })
+      } catch (error) {
+        await db.transaction(async () => {
+          await Object.query().where('owner_id', user.id).where('key', s3Path).delete()
+        })
+        objects.push({ key: s3Path, error: 'Failed to upload file' })
+        continue
+      }
+      objects.push({ key: s3Path, message: 'File uploaded successfully' })
     }
     if (objects.length === 0) {
       return response.internalServerError('Failed to upload files')
@@ -128,10 +142,12 @@ export default class AccessObjectsController {
     }
 
     for (const file of payload.files) {
-      Object.query().where('owner_id', user.id).where('key', prefix).update({
-        sizeBytes: file.size,
-        mimeType: file.type,
-        updatedAt: new Date(),
+      await db.transaction(async () => {
+        Object.query().where('owner_id', user.id).where('key', prefix).update({
+          sizeBytes: file.size,
+          mimeType: file.type,
+          updatedAt: new Date(),
+        })
       })
       await file.moveToDisk(prefix, diskName)
     }
@@ -150,7 +166,8 @@ export default class AccessObjectsController {
       return response.badRequest('Please upload a file')
     }
 
-    let objects = []
+    let objects: (ObjectError | ObjectSuccess)[] = []
+
     for (const file of payload.files) {
       const prefix = `files/${user.id}/${file.clientName}`
       if (
@@ -160,11 +177,12 @@ export default class AccessObjectsController {
         objects.push({ key: prefix, message: 'Failed to update file' })
         continue
       }
-
-      Object.query().where('owner_id', user.id).where('key', prefix).update({
-        sizeBytes: file.size,
-        mimeType: file.type,
-        updatedAt: new Date(),
+      await db.transaction(async () => {
+        Object.query().where('owner_id', user.id).where('key', prefix).update({
+          sizeBytes: file.size,
+          mimeType: file.type,
+          updatedAt: new Date(),
+        })
       })
       await file.moveToDisk(prefix, diskName)
       objects.push({ key: prefix, message: 'File updated successfully' })
@@ -208,7 +226,7 @@ export default class AccessObjectsController {
       return response.badRequest('Please provide at least one file id')
     }
 
-    let objects = []
+    let objects: (ObjectError | ObjectSuccess)[] = []
 
     for (const id of ids) {
       const prefix = `files/${user.id}/${id}`

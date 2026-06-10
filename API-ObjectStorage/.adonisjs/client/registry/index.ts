@@ -12,12 +12,6 @@ const routes = {
     tokens: [{"old":"/uploads/*","type":0,"val":"uploads","end":""},{"old":"/uploads/*","type":2,"val":"*","end":""}],
     types: placeholder as Registry['drive.fs.serve']['types'],
   },
-  'updateProfileAvatar': {
-    methods: ["POST"],
-    pattern: '/profile/avatar',
-    tokens: [{"old":"/profile/avatar","type":0,"val":"profile","end":""},{"old":"/profile/avatar","type":0,"val":"avatar","end":""}],
-    types: placeholder as Registry['updateProfileAvatar']['types'],
-  },
   'storage.objects.listObjects': {
     methods: ["GET","HEAD"],
     pattern: '/storage/objects',
@@ -29,6 +23,18 @@ const routes = {
     pattern: '/storage/objects',
     tokens: [{"old":"/storage/objects","type":0,"val":"storage","end":""},{"old":"/storage/objects","type":0,"val":"objects","end":""}],
     types: placeholder as Registry['storage.objects.createObject']['types'],
+  },
+  'storage.objects.bulkUpdateObjects': {
+    methods: ["PUT"],
+    pattern: '/storage/objects',
+    tokens: [{"old":"/storage/objects","type":0,"val":"storage","end":""},{"old":"/storage/objects","type":0,"val":"objects","end":""}],
+    types: placeholder as Registry['storage.objects.bulkUpdateObjects']['types'],
+  },
+  'storage.objects.bulkDeleteObjects': {
+    methods: ["DELETE"],
+    pattern: '/storage/objects',
+    tokens: [{"old":"/storage/objects","type":0,"val":"storage","end":""},{"old":"/storage/objects","type":0,"val":"objects","end":""}],
+    types: placeholder as Registry['storage.objects.bulkDeleteObjects']['types'],
   },
   'storage.objects.getObject': {
     methods: ["GET","HEAD"],
