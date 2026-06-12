@@ -53,6 +53,8 @@ router
   .prefix('/storage')
   .as('storage')
 
+// Quota routes
+// - Retrieve quota: GET /quota
 router
   .group(() => {
     router.get('/', [controllers.Quotas, 'index']).as('retrieveQuota').use(middleware.auth())

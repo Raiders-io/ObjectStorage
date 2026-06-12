@@ -150,6 +150,7 @@ export default class AccessObjectsController {
       return response.badRequest('Please upload a file')
     }
 
+    // Take the id as name of the file (not files[0].clientName)
     const prefix = `files/${user.id}/${params.id}`
     if (
       !(await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||

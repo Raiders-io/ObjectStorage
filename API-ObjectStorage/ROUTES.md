@@ -2,14 +2,14 @@
 
 See the project [BrunObjectStorage](https://github.com/Raiders-io/BrunObjectStorage) for testing the API using already prepared requests. Theses routes or the ones in `BrunObjectStorage` may have different versions or not be properly updated now.
 
-Rules:
+Rules :
 
 - `/storage` : prefix for all API routes
 - `/objects` : prefix for manipulating objects
 
-Routes:
+Other Routes:
 
-- POST `/api/v1/auth/signup` : user registration
+See the [ROUTES-AUTH.md](ROUTES-AUTH.md) file for documentation.
 
 ## GET /
 
