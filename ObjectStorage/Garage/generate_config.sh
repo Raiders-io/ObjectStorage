@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This script generates a garage.toml configuration file for the Garage object storage service.
+
 cat > garage.toml <<EOF
 metadata_dir = "/tmp/meta"
 data_dir = "/tmp/data"
