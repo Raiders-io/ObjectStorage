@@ -10,4 +10,5 @@ export const controllers = {
   NewAccount: () => import('#controllers/new_account_controller'),
   ProfileAvatars: () => import('#controllers/profile_avatars_controller'),
   Profile: () => import('#controllers/profile_controller'),
+  Quotas: () => import('#controllers/quotas_controller'),
 }

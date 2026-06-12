@@ -16,7 +16,7 @@ type QuotaUsage = Pick<
  * Utility functions for managing user quotas. class provides methods to check and update quotas during upload, download, and delete operations.
  * It also handles resetting daily counts based on the reset timestamps.
  * Exposed functions:
- * - QuotagetUserQuota
+ * - QuotaGetUserQuota
  * - QuotaTryToUpload
  * - QuotaTryToUpdate
  * - QuotaTryToDownload
@@ -95,12 +95,12 @@ async function resetDailyCounts(userId: number): Promise<QuotaUsage> {
   return createQuotaUsage(quotaRow, true)
 }
 
-export async function QuotagetUserQuota(userId: number): Promise<QuotaUsage | null> {
+export async function QuotaGetUserQuota(userId: number): Promise<QuotaUsage | null> {
   return await resetDailyCounts(userId)
 }
 
 export async function QuotaTryToUpload(userId: number, newObjectSize: bigint) {
-  const quotaUsage = await QuotagetUserQuota(userId)
+  const quotaUsage = await QuotaGetUserQuota(userId)
   if (!quotaUsage) {
     throw new Error('Failed to fetch user quotaUsage')
   }
@@ -118,6 +118,7 @@ export async function QuotaTryToUpload(userId: number, newObjectSize: bigint) {
     .update({
       storage_bytes: (BigInt(quotaUsage.storageBytes) + newObjectSize).toString(),
       object_count: (BigInt(quotaUsage.objectCount) + BigInt(1)).toString(),
+      upload_count: (BigInt(quotaUsage.uploadCount) + BigInt(1)).toString(),
     })
 }
 
@@ -131,7 +132,7 @@ export async function QuotaTryToUpdate(userId: number, newObjectSize: bigint) {
 }
 
 export async function QuotaTryToDownload(userId: number) {
-  const quotaUsage = await QuotagetUserQuota(userId)
+  const quotaUsage = await QuotaGetUserQuota(userId)
   if (!quotaUsage) {
     throw new Error('Failed to fetch user quotaUsage')
   }
@@ -148,7 +149,7 @@ export async function QuotaTryToDownload(userId: number) {
 }
 
 export async function QuotaTryToDelete(userId: number, objectSize: bigint) {
-  const quotaUsage = await QuotagetUserQuota(userId)
+  const quotaUsage = await QuotaGetUserQuota(userId)
   if (!quotaUsage) {
     throw new Error('Failed to fetch user quota')
   }

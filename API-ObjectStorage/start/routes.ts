@@ -53,6 +53,13 @@ router
   .prefix('/storage')
   .as('storage')
 
+router
+  .group(() => {
+    router.get('/', [controllers.Quotas, 'index']).as('retrieveQuota').use(middleware.auth())
+  })
+  .prefix('/quota')
+  .as('quota')
+
 // TODO: Auth routes are handled by another service
 router
   .group(() => {
