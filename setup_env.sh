@@ -2,10 +2,16 @@
 
 create_env()
 {
-	# if [ -f .env ]; then
-	# 	echo ".env file already exists. Skipping creation."
-	# 	return
-	# fi
+	if [ -f .env ]; then
+		echo ".env file already exists. Do you want to overwrite it?"
+		read -p "Continue? (Y/n): " confirm
+		confirm=${confirm:-y} # Default to 'y' if no input is provided
+		if ! [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
+			echo "Setup cancelled."
+			exit 1
+		fi
+	fi
+
 	cd API-ObjectStorage/ 
 	npm ci >/dev/null 
 	cp .env.example ../.env 
@@ -13,7 +19,6 @@ create_env()
 	cd -
 	sed -i "s|^\(GARAGE_DEFAULT_SECRET_KEY=\).*|\1$(openssl rand -hex 32)|" .env
 	sed -i "s|^\(GARAGE_DEFAULT_ACCESS_KEY=\).*|\1$(openssl rand -hex 16)|" .env
-	# echo "Please edit the .env file with your own values, use README.md as a reference."
 }
 
 configure_postgres()
