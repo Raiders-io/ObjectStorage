@@ -59,7 +59,7 @@ cd -
 You will need to execute the following to generate the `garage.toml` configuration file.
 
 ```bash
-cd ObjectStorage/Garage/
+cd Garage/
 chmod +x ./generate_config.sh
 ./generate_config.sh
 cd -

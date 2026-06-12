@@ -54,7 +54,7 @@ services:
     volumes:
       - object-storage-data:/var/lib/garage/data
       - object-storage-meta:/var/lib/garage/meta
-      - ./ObjectStorage/Garage/garage.toml:/etc/garage.toml #Needs to be generated with generate_garage_toml.sh
+      - ./Garage/garage.toml:/etc/garage.toml #Needs to be generated with generate_garage_toml.sh
     networks:
       - basic-network
     healthcheck:

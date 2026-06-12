@@ -33,7 +33,7 @@ configure_postgres()
 
 configure_garage()
 {
-	cd ObjectStorage/Garage/
+	cd Garage/
 	chmod +x ./generate_config.sh
 	./generate_config.sh
 }
