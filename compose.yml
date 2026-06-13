@@ -32,11 +32,8 @@ services:
     networks:
       - basic-network
       - public-network
-    volumes:
-      - object-api-tmp:/tmp # WIP DB is stored in tmp now
-      - object-api-storage:/app/storage # WIP DB is stored in tmp now
     ports:
-      - "3334:3333" #default port is 3333
+      - "3334:3333"
     restart: always
 
   garage:
@@ -50,11 +47,13 @@ services:
       - GARAGE_RUST_LOG=${GARAGE_RUST_LOG:?}
     # ports: # Expose ports only in dev mode, not in production
       # - "3900:3900"   # S3 API
-      # - "3903:3903"   # Admin API
+      # - "3901:3901"   # RPC inter-nodes (here single-node, so not needed)
+      # - "3902:3902"   # Host static web pages
+      # - "3903:3903"   # Admin API + metrics
     volumes:
       - object-storage-data:/var/lib/garage/data
       - object-storage-meta:/var/lib/garage/meta
-      - ./Garage/garage.toml:/etc/garage.toml #Needs to be generated with generate_garage_toml.sh
+      - ./Garage/garage.toml:/etc/garage.toml
     networks:
       - basic-network
     healthcheck:
@@ -74,8 +73,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
     volumes:
       - object-db-data:/var/lib/postgresql/18/docker
-    ports:
-      - "5432:5432" #TODO : Expose port only in dev mode, not in production
+    # ports:
+      # - "5432:5432" #TODO : Expose port only in dev mode, not in production
     networks:
       - basic-network
       - public-network
@@ -94,10 +93,7 @@ networks:
   public-network:
     external: true
 
-# Docker-managed named volume (no host bind). Data will be stored in Docker's volume
 volumes:
-  object-api-tmp:
-  object-api-storage:
   object-db-data:
   object-storage-data:
   object-storage-meta:
