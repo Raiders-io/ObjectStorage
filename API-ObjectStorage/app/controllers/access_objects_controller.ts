@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { FilesValidator } from '#validators/file'
+import { FilesValidator, FileValidator } from '#validators/file'
 import drive from '@adonisjs/drive/services/main'
 import Object from '#models/object'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
@@ -127,24 +127,40 @@ export default class AccessObjectsController {
       key: params.id,
       error: ObjectResponseTypeError.NotFound,
     })
-
-    // new ObjectResponseType().addError({ key: prefix, error: ObjectResponseTypeError.NotFound })
   }
 
   async update({ auth, params, request, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    const payload = await request.validateUsing(FilesValidator)
+    const payload = await request.validateUsing(FileValidator)
 
-    if (!payload || payload.files.length === 0) {
-      return response.badRequest(ObjectResponseTypeError.NoFileProvided)
+    if (!payload || !payload.file) {
+      return response.badRequest({
+        key: params.id,
+        error: ObjectResponseTypeError.NoFileProvided,
+      })
     }
 
     if (params.id === undefined) {
-      return response.badRequest(ObjectResponseTypeError.NoFileID)
+      return response.badRequest({
+        key: params.id,
+        error: ObjectResponseTypeError.NoFileID,
+      })
     }
 
-    // Take the id as name of the file (not files[0].clientName)
+    if (params.id !== payload.file.clientName) {
+      return response.badRequest({
+        key: params.id,
+        error: ObjectResponseTypeError.FileNameMismatch,
+      })
+    }
+    const file = payload.file
+    try {
+      await QuotaTryToUpdate(user.id, BigInt(file.size))
+    } catch (error) {
+      return response.badRequest((error as Error).message)
+    }
+
     const prefix = `files/${user.id}/${params.id}`
     if (
       !(await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
@@ -156,28 +172,20 @@ export default class AccessObjectsController {
       })
     }
 
-    const objects = new ObjectResponseType()
-
-    for (const file of payload.files) {
-      await db.transaction(async () => {
-        await Object.query().where('owner_id', user.id).where('key', prefix).update({
-          sizeBytes: file.size,
-          mimeType: file.type,
-          updatedAt: new Date(),
-        })
+    await db.transaction(async () => {
+      await Object.query().where('owner_id', user.id).where('key', prefix).update({
+        sizeBytes: file.size,
+        mimeType: file.type,
+        updatedAt: new Date(),
       })
+    })
 
-      try {
-        await QuotaTryToUpdate(user.id, BigInt(file.size))
-      } catch (error) {
-        return response.badRequest((error as Error).message)
-      }
+    await file.moveToDisk(prefix, diskName)
 
-      await file.moveToDisk(prefix, diskName)
-      objects.addSuccess({ key: prefix, message: ObjectResponseTypeSuccess.UpdateSuccess })
+    return {
+      key: params.id,
+      message: ObjectResponseTypeSuccess.UpdateSuccess,
     }
-
-    return { objects: objects.get() }
   }
 
   async updateMany({ auth, request, response }: HttpContext) {
@@ -186,18 +194,28 @@ export default class AccessObjectsController {
     const payload = await request.validateUsing(FilesValidator)
 
     if (!payload || payload.files.length === 0) {
-      return response.badRequest(ObjectResponseTypeError.NoFileProvided)
+      return response.badRequest({
+        key: 'files[]',
+        error: ObjectResponseTypeError.NoFileProvided,
+      })
     }
 
     const objects = new ObjectResponseType()
 
     for (const file of payload.files) {
+      try {
+        await QuotaTryToUpdate(user.id, BigInt(file.size))
+      } catch (error) {
+        objects.addError({ key: file.clientName, error: (error as Error).message })
+        continue
+      }
+
       const prefix = `files/${user.id}/${file.clientName}`
       if (
         !(await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
         !(await disk.exists(prefix))
       ) {
-        objects.addError({ key: prefix, error: ObjectResponseTypeError.NotFound })
+        objects.addError({ key: file.clientName, error: ObjectResponseTypeError.NotFound })
         continue
       }
       await db.transaction(async () => {
@@ -207,15 +225,9 @@ export default class AccessObjectsController {
           updatedAt: new Date(),
         })
       })
-      try {
-        await QuotaTryToUpdate(user.id, BigInt(file.size))
-      } catch (error) {
-        objects.addError({ key: prefix, error: (error as Error).message })
-        continue
-      }
 
       await file.moveToDisk(prefix, diskName)
-      objects.addSuccess({ key: prefix, message: ObjectResponseTypeSuccess.UpdateSuccess })
+      objects.addSuccess({ key: file.clientName, message: ObjectResponseTypeSuccess.UpdateSuccess })
     }
 
     return { objects: objects.get() }
@@ -225,7 +237,10 @@ export default class AccessObjectsController {
     const user = auth.getUserOrFail()
 
     if (params.id === undefined) {
-      return response.badRequest(ObjectResponseTypeError.NoFileID)
+      return response.badRequest({
+        key: 'file',
+        error: ObjectResponseTypeError.NoFileID,
+      })
     }
     const id = params.id
 
@@ -257,7 +272,10 @@ export default class AccessObjectsController {
     const ids = request.input('ids') as string[] | undefined
 
     if (!ids || ids.length === 0) {
-      return response.badRequest(ObjectResponseTypeError.NoFileID)
+      return response.badRequest({
+        key: 'ids',
+        error: ObjectResponseTypeError.NoFileID,
+      })
     }
 
     const objects = new ObjectResponseType()
@@ -266,17 +284,22 @@ export default class AccessObjectsController {
       const prefix = `files/${user.id}/${id}`
       const query = await Object.query().where('owner_id', user.id).where('key', prefix).first()
       if (!query || !(await disk.exists(prefix))) {
-        objects.addError({ key: prefix, error: ObjectResponseTypeError.NotFound })
+        objects.addError({ key: id, error: ObjectResponseTypeError.NotFound })
         continue
       }
+
       try {
         await QuotaTryToDelete(user.id, BigInt(query.sizeBytes))
       } catch (error) {
-        return response.badRequest((error as Error).message)
+        return response.badRequest({
+          key: 'ids',
+          error: (error as Error).message,
+        })
       }
+
       await disk.delete(prefix)
       await Object.query().where('owner_id', user.id).where('key', prefix).delete()
-      objects.addSuccess({ key: prefix, message: ObjectResponseTypeSuccess.DeleteSuccess })
+      objects.addSuccess({ key: id, message: ObjectResponseTypeSuccess.DeleteSuccess })
     }
 
     return { objects: objects.get() }
