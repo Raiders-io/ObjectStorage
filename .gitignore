@@ -34,5 +34,15 @@ garage-data
 .aws/credentials
 .awsrc
 
-# PostgreSQL Specific
+# Folders for backup data, which may contain real credentials
 postgresql-data
+backup_db-data.tar
+backup_db-data
+backup_storage-data.tar
+backup_storage-data
+backup_storage-meta.tar
+backup_storage-meta
+# Volumes associated with the project, which may contain real credentials
+volume_db-data
+volume_storage-data
+volume_storage-meta
