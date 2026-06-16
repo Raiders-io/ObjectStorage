@@ -36,3 +36,9 @@ garage-data
 
 # PostgreSQL Specific
 postgresql-data
+backup_db-data.tar
+backup_storage-data.tar
+backup_storage-meta.tar
+volume_db-data
+volume_storage-data
+volume_storage-meta
