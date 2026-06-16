@@ -21,6 +21,21 @@ up:
 down:
 	docker compose down
 
+save:
+	docker run --rm -v objectstorage_object-storage-data:/volume_storage-data -v $(shell pwd):/backup ubuntu tar cvf /backup/backup_storage-data.tar /volume_storage-data
+	docker run --rm -v objectstorage_object-storage-meta:/volume_storage-meta -v $(shell pwd):/backup ubuntu tar cvf /backup/backup_storage-meta.tar /volume_storage-meta
+	docker run --rm -v objectstorage_object-db-data:/volume_db-data -v $(shell pwd):/backup ubuntu tar cvf /backup/backup_db-data.tar /volume_db-data
+
+backup:
+	docker run --rm -v objectstorage_object-storage-data:/volume_storage-data -v $(shell pwd):/backup ubuntu tar xvf /backup/backup_storage-data.tar -C .
+	docker run --rm -v objectstorage_object-storage-meta:/volume_storage-meta -v $(shell pwd):/backup ubuntu tar xvf /backup/backup_storage-meta.tar -C .
+	docker run --rm -v objectstorage_object-db-data:/volume_db-data -v $(shell pwd):/backup ubuntu tar xvf /backup/backup_db-data.tar -C .
+
+open:
+	tar -xf backup_storage-data.tar
+	tar -xf backup_storage-meta.tar
+	tar -xf backup_db-data.tar
+
 ls: list
 list:
 	docker ps
