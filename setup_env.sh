@@ -23,6 +23,15 @@ create_env()
 
 configure_postgres()
 {
+	echo "Do you want to manually configure the PostgreSQL root user and password? (This will overwrite existing values in .env)"
+	read -p "Continue? (y/N): " confirm
+	confirm=${confirm:-n} # Default to 'n' if no input is provided
+	if ! [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
+		sed -i "s|^\(POSTGRES_USER=\).*|\1$(openssl rand -hex 31)|" .env
+		sed -i "s|^\(POSTGRES_PASSWORD=\).*|\1$(openssl rand -hex 64)|" .env
+		return
+	fi
+
 	echo "Choose a name for the PostgreSQL root user:"
 	read POSTGRES_USER
 	echo "Choose a password for the PostgreSQL root user (hidden):"
