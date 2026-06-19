@@ -7,9 +7,12 @@ create_env()
 		read -p "Continue? (Y/n): " confirm
 		confirm=${confirm:-y} # Default to 'y' if no input is provided
 		if ! [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
-			echo "Setup cancelled."
-			exit 1
+			echo "Not replacing the file."
+			# echo "Setup cancelled."
+			# exit 1
 		fi
+	else
+		cp .env.example .env
 	fi
 
 	cd API-ObjectStorage/ 
@@ -27,8 +30,8 @@ configure_postgres()
 	read -p "Continue? (y/N): " confirm
 	confirm=${confirm:-n} # Default to 'n' if no input is provided
 	if ! [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
-		sed -i "s|^\(POSTGRES_USER=\).*|\1$(openssl rand -hex 31)|" .env
-		sed -i "s|^\(POSTGRES_PASSWORD=\).*|\1$(openssl rand -hex 64)|" .env
+		sed -i "s|^\(POSTGRES_USER=\).*|\1$(openssl rand -base64 63 | tr -dc '[:alnum:]' | head -c 63 )|" .env
+		sed -i "s|^\(POSTGRES_PASSWORD=\).*|\1$(openssl rand -base64 128 | tr -dc '[:alnum:]' | head -c 128 )|" .env
 		return
 	fi
 
