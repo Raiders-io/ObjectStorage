@@ -17,7 +17,8 @@ export default class QuotasController {
           'upload_count',
           'upload_count_limit',
           'download_count_reset_at',
-          'upload_count_reset_at'
+          'upload_count_reset_at',
+          'updated_at'
         )
         .where('user_id', user.id)
         .first()
