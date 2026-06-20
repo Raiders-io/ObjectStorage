@@ -122,11 +122,14 @@ export async function QuotaTryToUpload(userId: number, newObjectSize: bigint) {
     })
 }
 
-// TODO: File already arrived so it's not really a protection against quota overflow
 export async function QuotaTryToUpdate(userId: number, newObjectSize: bigint) {
   /**
    * When replacing, the new object will replace the old one, so but at a time,
-   * the two objects coexists. The total storage bytes shouldn't exceed the limit even during the upload process.
+   * the two objects coexists. The total storage bytes shouldn't exceed the limit
+   * even during the upload process. The temporary object is stored firstly in API,
+   * then moved to ObjectStorage. As we can't trust the incomming file size, 
+   * we need to check the quota after the file is uploaded. 
+   * If the quota is exceeded, we should delete the temporary file and return an error.
    *  */
   await QuotaTryToUpload(userId, newObjectSize)
 }

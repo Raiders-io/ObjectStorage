@@ -1,11 +1,11 @@
+name: objectstorage
 services:
-# Object Storage
   object-api:
     container_name: object-api
     build:
       context: ./API-ObjectStorage
       target: production # production or dev
-    image: object-api-storage:local
+    image: object-api:local
     environment:
       - API_PORT=3333
       - HOST=${HOST:?}
@@ -45,24 +45,24 @@ services:
       - GARAGE_DEFAULT_SECRET_KEY=${GARAGE_DEFAULT_SECRET_KEY:?}
       - GARAGE_DEFAULT_BUCKET=${GARAGE_DEFAULT_BUCKET:?}
       - GARAGE_RUST_LOG=${GARAGE_RUST_LOG:?}
-    # ports: # Expose ports only in dev mode, not in production
-      # - "3900:3900"   # S3 API
-      # - "3901:3901"   # RPC inter-nodes (here single-node, so not needed)
-      # - "3902:3902"   # Host static web pages
-      # - "3903:3903"   # Admin API + metrics
     volumes:
       - object-storage-data:/var/lib/garage/data
       - object-storage-meta:/var/lib/garage/meta
       - ./Garage/garage.toml:/etc/garage.toml
     networks:
       - basic-network
+    # ports:
+      # - "3900:3900"   # S3 API
+      # - "3901:3901"   # RPC inter-nodes (here single-node, so not needed)
+      # - "3902:3902"   # Host static web pages
+      # - "3903:3903"   # Admin API + metrics
     healthcheck:
       test: ["CMD", "/garage", "status"]
       interval: 10s
       timeout: 15s
       retries: 10
       start_period: 5s
-    restart: unless-stopped
+    restart: always
 
   postgresql:
     container_name: object-db
@@ -73,17 +73,17 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
     volumes:
       - object-db-data:/var/lib/postgresql/18/docker
-    # ports:
-      # - "5432:5432" #TODO : Expose port only in dev mode, not in production
     networks:
       - basic-network
+    # ports:
+      # - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 30s
       retries: 10
       start_period: 5s
-    restart: unless-stopped
+    restart: always
 
 networks:
   basic-network:

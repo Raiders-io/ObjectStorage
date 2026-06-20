@@ -1,5 +1,11 @@
 import { defineConfig } from '@adonisjs/core/bodyparser'
 
+/**
+ * Body parser config for API-ObjectStorage.
+ * Adjust the limits and allowed content types as needed for your application.
+ * //TODO: Adjust the limits (and fieldsLimit) and allowed content types as needed for your application.
+ */
+
 const bodyParserConfig = defineConfig({
   /**
    * Parse request bodies for these HTTP methods.
@@ -21,6 +27,7 @@ const bodyParserConfig = defineConfig({
      * Content types handled by the form parser.
      */
     types: ['application/x-www-form-urlencoded'],
+    limit: '1mb',
   },
 
   /**
@@ -41,6 +48,7 @@ const bodyParserConfig = defineConfig({
       'application/vnd.api+json',
       'application/csp-report',
     ],
+    limit: '1mb',
   },
 
   /**
@@ -66,7 +74,13 @@ const bodyParserConfig = defineConfig({
     /**
      * Maximum accepted payload size for multipart requests.
      */
-    limit: '20mb', //TODO: Adjust with the maximum expected file sizes
+    limit: '20mb',
+    /**
+     * Maximum accepted size for non-file form fields in multipart requests.
+     * Limits abuses where an attacker could send a large number of small fields
+     * to exhaust server resources without sending large files.
+     */
+    fieldsLimit: '2mb',
 
     /**
      * Content types handled by the multipart parser.
