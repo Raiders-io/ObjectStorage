@@ -20,13 +20,20 @@ const diskName = 's3'
 const disk = drive.use(diskName)
 
 export default class AccessObjectsController {
-  async index({ auth }: HttpContext) {
+  async index({ auth, request }: HttpContext) {
     const user = auth.getUserOrFail()
+
+    const page = request.input('page', 1)
+    let limit = request.input('limit', 10)
+    if (limit > 100)
+      limit = 100
 
     try {
       const response = await Object.query()
         .where('owner_id', user.id)
         .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
+        .orderBy('created_at', 'desc')
+        .paginate(page, limit)
       return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: response }
     } catch (error) {
       return { error: ObjectResponseTypeError.IndexError }
