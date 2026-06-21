@@ -22,9 +22,6 @@ export default await Env.create(new URL('../', import.meta.url), {
   APP_KEY: Env.schema.secret(),
   APP_URL: Env.schema.string({ format: 'url', tld: false }),
 
-  // Database
-  DB_SQLITE_FILENAME: Env.schema.string.optional(),
-
   // Session
   SESSION_DRIVER: Env.schema.enum(['cookie', 'memory', 'database'] as const),
 
@@ -38,7 +35,12 @@ export default await Env.create(new URL('../', import.meta.url), {
   AWS_SECRET_ACCESS_KEY: Env.schema.string(),
   AWS_REGION: Env.schema.string(),
   S3_BUCKET: Env.schema.string(),
-
+  S3_ENDPOINT: Env.schema.string(),
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the database
+  |----------------------------------------------------------
+  */
   POSTGRES_SERVICE_NAME: Env.schema.string(),
   POSTGRES_PORT: Env.schema.number(),
   POSTGRES_USER: Env.schema.string(),

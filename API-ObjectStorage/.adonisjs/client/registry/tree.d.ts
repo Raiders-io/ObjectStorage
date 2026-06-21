@@ -4,34 +4,37 @@ import type { routes } from './index.ts'
 export interface ApiDefinition {
   drive: {
     fs: {
-      serve: (typeof routes)['drive.fs.serve']
+      serve: typeof routes['drive.fs.serve']
     }
   }
   storage: {
     objects: {
-      listObjects: (typeof routes)['storage.objects.listObjects']
-      createObject: (typeof routes)['storage.objects.createObject']
-      bulkUpdateObjects: (typeof routes)['storage.objects.bulkUpdateObjects']
-      bulkDeleteObjects: (typeof routes)['storage.objects.bulkDeleteObjects']
-      getObject: (typeof routes)['storage.objects.getObject']
-      updateObject: (typeof routes)['storage.objects.updateObject']
-      deleteObject: (typeof routes)['storage.objects.deleteObject']
+      listObjects: typeof routes['storage.objects.listObjects']
+      createObject: typeof routes['storage.objects.createObject']
+      bulkUpdateObjects: typeof routes['storage.objects.bulkUpdateObjects']
+      bulkDeleteObjects: typeof routes['storage.objects.bulkDeleteObjects']
+      getObject: typeof routes['storage.objects.getObject']
+      updateObject: typeof routes['storage.objects.updateObject']
+      deleteObject: typeof routes['storage.objects.deleteObject']
     }
+  }
+  quota: {
+    retrieveQuota: typeof routes['quota.retrieveQuota']
   }
   auth: {
     newAccount: {
-      store: (typeof routes)['auth.new_account.store']
+      store: typeof routes['auth.new_account.store']
     }
     accessTokens: {
-      store: (typeof routes)['auth.access_tokens.store']
+      store: typeof routes['auth.access_tokens.store']
     }
   }
   profile: {
     profile: {
-      show: (typeof routes)['profile.profile.show']
+      show: typeof routes['profile.profile.show']
     }
     accessTokens: {
-      destroy: (typeof routes)['profile.access_tokens.destroy']
+      destroy: typeof routes['profile.access_tokens.destroy']
     }
   }
 }

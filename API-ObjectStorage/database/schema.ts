@@ -104,7 +104,7 @@ export class UserQuotaSchema extends BaseModel {
   ] as const
   $columns = UserQuotaSchema.$columns
   @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime | null
+  declare createdAt: DateTime
   @column()
   declare downloadCount: bigint | number
   @column()
@@ -122,7 +122,7 @@ export class UserQuotaSchema extends BaseModel {
   @column()
   declare storageBytesLimit: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime | null
+  declare updatedAt: DateTime
   @column()
   declare uploadCount: bigint | number
   @column()

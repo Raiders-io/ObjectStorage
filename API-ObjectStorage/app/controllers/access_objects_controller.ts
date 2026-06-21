@@ -25,8 +25,7 @@ export default class AccessObjectsController {
 
     const page = request.input('page', 1)
     let limit = request.input('limit', 10)
-    if (limit > 100)
-      limit = 100
+    if (limit > 100) limit = 100
 
     try {
       const response = await Object.query()
