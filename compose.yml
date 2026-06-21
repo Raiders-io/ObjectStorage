@@ -31,7 +31,7 @@ services:
        condition: service_healthy
     networks:
       - basic-network
-      - public-network
+      - api-network
     ports:
       - "3334:3333"
     restart: always
@@ -89,7 +89,7 @@ networks:
   basic-network:
     driver: bridge
     internal: true
-  public-network:
+  api-network:
     external: true
 
 volumes:

@@ -49,38 +49,36 @@ router
       .as('objects')
       .use(middleware.auth())
       .use(middleware.cleanupUploads())
+
+    // Quota routes
+    // - Retrieve quota: GET /quota
+    router
+      .group(() => {
+        router.get('/', [controllers.Quotas, 'index']).as('retrieveQuota').use(middleware.auth())
+      })
+      .prefix('/quota')
+      .as('quota')
+
+    // TODO: Auth routes are handled by another service
+    router.group(() => {
+      router
+        .group(() => {
+          router.post('signup', [controllers.NewAccount, 'store'])
+          router.post('login', [controllers.AccessTokens, 'store'])
+        })
+        .prefix('/auth')
+        .as('auth')
+        .use(middleware.guest())
+
+      router
+        .group(() => {
+          router.get('profile', [controllers.Profile, 'show'])
+          router.post('logout', [controllers.AccessTokens, 'destroy'])
+        })
+        .prefix('/account')
+        .as('profile')
+        .use(middleware.auth())
+    })
   })
-  .prefix('/storage')
+  .prefix('/api/v1/storage')
   .as('storage')
-
-// Quota routes
-// - Retrieve quota: GET /quota
-router
-  .group(() => {
-    router.get('/', [controllers.Quotas, 'index']).as('retrieveQuota').use(middleware.auth())
-  })
-  .prefix('/quota')
-  .as('quota')
-
-// TODO: Auth routes are handled by another service
-router
-  .group(() => {
-    router
-      .group(() => {
-        router.post('signup', [controllers.NewAccount, 'store'])
-        router.post('login', [controllers.AccessTokens, 'store'])
-      })
-      .prefix('auth')
-      .as('auth')
-      .use(middleware.guest())
-
-    router
-      .group(() => {
-        router.get('profile', [controllers.Profile, 'show'])
-        router.post('logout', [controllers.AccessTokens, 'destroy'])
-      })
-      .prefix('account')
-      .as('profile')
-      .use(middleware.auth())
-  })
-  .prefix('/api/v1')
