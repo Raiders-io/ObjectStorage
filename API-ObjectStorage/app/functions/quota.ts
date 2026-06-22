@@ -124,16 +124,51 @@ export async function QuotaTryToUpload(userId: number, newObjectSize: bigint) {
     })
 }
 
-export async function QuotaTryToUpdate(userId: number, newObjectSize: bigint) {
-  /**
-   * When replacing, the new object will replace the old one, so but at a time,
-   * the two objects coexists. The total storage bytes shouldn't exceed the limit
-   * even during the upload process. The temporary object is stored firstly in API,
-   * then moved to ObjectStorage. As we can't trust the incomming file size,
-   * we need to check the quota after the file is uploaded.
-   * If the quota is exceeded, we should delete the temporary file and return an error.
-   *  */
-  await QuotaTryToUpload(userId, newObjectSize)
+export async function QuotaVerifyForUpdate(userId: number, newObjectSize: bigint) {
+  const quotaUsage = await QuotaGetUserQuota(userId)
+  if (!quotaUsage) {
+    throw new Error('Failed to fetch user quotaUsage')
+  }
+
+  if (BigInt(quotaUsage.storageBytes) + newObjectSize > BigInt(quotaUsage.storageBytesLimit)) {
+    throw new Error('Storage bytes limit exceeded')
+  }
+
+  return quotaUsage
+}
+
+/**
+ * When replacing, the new object will replace the old one, so but at a time,
+ * the two objects coexists. The total storage bytes shouldn't exceed the limit
+ * even during the upload process. The temporary object is stored firstly in API,
+ * then moved to ObjectStorage. As we can't trust the incomming file size,
+ * we need to check the quota after the file is uploaded.
+ * If the quota is exceeded, we should delete the temporary file and return an error.
+ *  */
+export async function QuotaTryToUpdate(
+  userId: number,
+  newObjectSize: bigint,
+  oldObjectSize: bigint
+) {
+  const quotaUsage = await QuotaGetUserQuota(userId)
+  if (!quotaUsage) {
+    throw new Error('Failed to fetch user quotaUsage')
+  }
+
+  if (
+    BigInt(quotaUsage.storageBytes) + newObjectSize - oldObjectSize >
+    BigInt(quotaUsage.storageBytesLimit)
+  ) {
+    throw new Error('Storage bytes limit exceeded')
+  }
+
+  await Quota.query()
+    .where('user_id', userId)
+    .update({
+      storage_bytes: (BigInt(quotaUsage.storageBytes) + newObjectSize - oldObjectSize).toString(),
+      upload_count: (BigInt(quotaUsage.uploadCount) + BigInt(1)).toString(),
+      updated_at: new Date(),
+    })
 }
 
 export async function QuotaTryToDownload(userId: number) {

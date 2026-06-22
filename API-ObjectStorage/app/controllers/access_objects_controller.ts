@@ -5,6 +5,7 @@ import Object from '#models/object'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import db from '@adonisjs/lucid/services/db'
 import {
+  QuotaVerifyForUpdate,
   QuotaTryToUpload,
   QuotaTryToDownload,
   QuotaTryToUpdate,
@@ -162,22 +163,24 @@ export default class AccessObjectsController {
     }
     const file = payload.file
     try {
-      await QuotaTryToUpdate(user.id, BigInt(file.size))
+      await QuotaVerifyForUpdate(user.id, BigInt(file.size))
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
 
     const prefix = `files/${user.id}/${params.id}`
-    if (
-      !(await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
-      !(await disk.exists(prefix))
-    ) {
+    const query = await Object.query()
+      .select('size_bytes')
+      .where('owner_id', user.id)
+      .where('key', prefix)
+      .first()
+    if (!query || !(await disk.exists(prefix))) {
       return response.notFound({
         key: params.id,
         error: ObjectResponseTypeError.NotFound,
       })
     }
-
+    await QuotaTryToUpdate(user.id, BigInt(file.size), BigInt(query.sizeBytes))
     await db.transaction(async () => {
       await Object.query().where('owner_id', user.id).where('key', prefix).update({
         sizeBytes: file.size,
@@ -210,20 +213,23 @@ export default class AccessObjectsController {
 
     for (const file of payload.files) {
       try {
-        await QuotaTryToUpdate(user.id, BigInt(file.size))
+        await QuotaVerifyForUpdate(user.id, BigInt(file.size))
       } catch (error) {
         objects.addError({ key: file.clientName, error: (error as Error).message })
         continue
       }
 
       const prefix = `files/${user.id}/${file.clientName}`
-      if (
-        !(await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
-        !(await disk.exists(prefix))
-      ) {
+      const query = await Object.query()
+        .select('size_bytes')
+        .where('owner_id', user.id)
+        .where('key', prefix)
+        .first()
+      if (!query || !(await disk.exists(prefix))) {
         objects.addError({ key: file.clientName, error: ObjectResponseTypeError.NotFound })
         continue
       }
+      await QuotaTryToUpdate(user.id, BigInt(file.size), BigInt(query.sizeBytes))
       await db.transaction(async () => {
         await Object.query().where('owner_id', user.id).where('key', prefix).update({
           sizeBytes: file.size,
