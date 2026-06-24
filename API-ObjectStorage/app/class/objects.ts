@@ -20,6 +20,7 @@ export enum ObjectResponseTypeError {
   NoFileID = 'Please provide a file id',
   NotFound = 'Object not found',
   FileNameMismatch = 'File name does not match the provided file id',
+  InvalidUserID = 'Invalid user id',
 
   // Routes messages Error
   IndexError = 'Failed to fetch objects',
@@ -27,6 +28,7 @@ export enum ObjectResponseTypeError {
   UploadAlreadyExists = 'File already exists, use update if you want to replace it',
   UpdateError = 'Failed to update file',
   DeleteError = 'Failed to delete file',
+  InvalidVisibilityState = 'Invalid visibility state, must be one of: public, private, shared',
 }
 
 // Routes messages Success
@@ -35,6 +37,7 @@ export enum ObjectResponseTypeSuccess {
   DeleteSuccess = 'File deleted successfully',
   UploadSuccess = 'File uploaded successfully',
   UpdateSuccess = 'File updated successfully',
+  UpdateVisibilitySuccess = 'File visibility updated successfully',
 }
 
 /**

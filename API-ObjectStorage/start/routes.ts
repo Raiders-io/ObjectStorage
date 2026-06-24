@@ -31,19 +31,19 @@ router
   .group(() => {
     router
       .group(() => {
+        // Basics routes for objects
         router.get('/', [controllers.AccessObjects, 'index']).as('listObjects')
-
         router.post('/', [controllers.AccessObjects, 'store']).as('createObject')
-
         router.put('/', [controllers.AccessObjects, 'updateMany']).as('bulkUpdateObjects')
-
         router.delete('/', [controllers.AccessObjects, 'destroyMany']).as('bulkDeleteObjects')
-
         router.get('/:id', [controllers.AccessObjects, 'show']).as('getObject')
-
         router.put('/:id', [controllers.AccessObjects, 'update']).as('updateObject')
-
         router.delete('/:id', [controllers.AccessObjects, 'destroy']).as('deleteObject')
+        // Special routes
+        router.get('show/:userid/:id', [controllers.AccessObjects, 'showFrom']).as('getObjectFrom')
+        router
+          .put('/visibility/:id/:state', [controllers.AccessObjects, 'updateVisibility'])
+          .as('updateObjectVisibility')
       })
       .prefix('/objects')
       .as('objects')

@@ -21,7 +21,7 @@ const diskName = 's3'
 const disk = drive.use(diskName)
 
 export default class AccessObjectsController {
-  async index({ auth, request }: HttpContext) {
+  async index({ auth, request, response }: HttpContext) {
     const user = auth.getUserOrFail()
 
     const page = request.input('page', 1)
@@ -36,7 +36,7 @@ export default class AccessObjectsController {
         .paginate(page, limit)
       return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: response }
     } catch (error) {
-      return { error: ObjectResponseTypeError.IndexError }
+      return response.badRequest({ error: ObjectResponseTypeError.IndexError })
     }
   }
 
@@ -272,10 +272,10 @@ export default class AccessObjectsController {
     await disk.delete(prefix)
     await Object.query().where('owner_id', user.id).where('key', prefix).delete()
 
-    return {
+    return response.noContent({
       key: id,
       message: ObjectResponseTypeSuccess.DeleteSuccess,
-    }
+    })
   }
 
   async destroyMany({ auth, request, response }: HttpContext) {
@@ -315,5 +315,75 @@ export default class AccessObjectsController {
     }
 
     return { objects: objects.get() }
+  }
+
+  async showFrom({ auth, params, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    try {
+      await QuotaTryToDownload(user.id)
+    } catch (error) {
+      return response.badRequest((error as Error).message)
+    }
+    if (!params.userid || !params.id) {
+      return response.badRequest({
+        key: 'userid',
+        error: ObjectResponseTypeError.InvalidUserID,
+      })
+    }
+    const prefix = `files/${params.userid}/${params.id}`
+    try {
+      if (
+        (await Object.query()
+          .where('owner_id', params.userid)
+          .where('key', prefix)
+          .where('visibility', 'public')
+          .first()) ||
+        (await disk.exists(prefix))
+      ) {
+        const stream = await disk.getStream(prefix)
+        response.header('Content-Disposition', `attachment; filename="${params.id}"`)
+        response.header('Content-Type', 'application/octet-stream')
+        return response.stream(stream)
+      }
+      return response.notFound({
+        key: params.id,
+        error: ObjectResponseTypeError.NotFound,
+      })
+    } catch (error) {
+      return response.badRequest({
+        key: params.id,
+        error: ObjectResponseTypeError.IndexError,
+      })
+    }
+  }
+
+  async updateVisibility({ auth, params, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    if (params.id === undefined) {
+      return response.badRequest({ key: 'file?', error: ObjectResponseTypeError.NoFileID })
+    }
+    const id = params.id
+    if (!params.state || !(params.state in StorageObjectVisibility)) {
+      return response.badRequest({ key: id, error: ObjectResponseTypeError.InvalidVisibilityState })
+    }
+    const prefix = `files/${user.id}/${id}`
+    try {
+      if (
+        await Object.query().where('owner_id', user.id).where('key', prefix).update({
+          visibility: params.state,
+          updatedAt: new Date(),
+        })
+      ) {
+        return {
+          key: id,
+          message: ObjectResponseTypeSuccess.UpdateVisibilitySuccess,
+        }
+      }
+    } catch (error) {
+      return response.badRequest({ key: id, error: ObjectResponseTypeError.IndexError })
+    }
+    return response.badRequest({ key: id, error: ObjectResponseTypeError.IndexError })
   }
 }
