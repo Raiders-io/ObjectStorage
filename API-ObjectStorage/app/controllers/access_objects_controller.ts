@@ -26,7 +26,8 @@ export default class AccessObjectsController {
 
     const page = request.input('page', 1)
     let limit = request.input('limit', 10)
-    if (limit > 100) limit = 100
+    if (limit < 0) limit = 1
+    else if (limit > 100) limit = 100
 
     try {
       const response = await Object.query()
@@ -370,20 +371,42 @@ export default class AccessObjectsController {
     }
     const prefix = `files/${user.id}/${id}`
     try {
-      if (
-        await Object.query().where('owner_id', user.id).where('key', prefix).update({
-          visibility: params.state,
-          updatedAt: new Date(),
-        })
-      ) {
+      const result = await Object.query().where('owner_id', user.id).where('key', prefix).update({
+        visibility: params.state,
+        updatedAt: new Date(),
+      })
+      if ( result.length > 0 && result[0] > 0) {
         return {
           key: id,
           message: ObjectResponseTypeSuccess.UpdateVisibilitySuccess,
         }
       }
-    } catch (error) {
-      return response.badRequest({ key: id, error: ObjectResponseTypeError.IndexError })
-    }
+    } catch (error) {}
     return response.badRequest({ key: id, error: ObjectResponseTypeError.IndexError })
+  }
+  
+  async indexFrom({ auth, params, request, response }: HttpContext) {
+    auth.getUserOrFail()
+
+    const page = request.input('page', 1)
+    let limit = request.input('limit', 10)
+    if (limit < 0) limit = 1
+    else if (limit > 100) limit = 100
+
+    if (params.userid === undefined) {
+      return response.badRequest({ key: 'userid', error: ObjectResponseTypeError.NoUserID })
+    }
+    const target = params.userid
+    try {
+      const response = await Object.query()
+        .where('owner_id', target)
+        .where('visibility', 'public')
+        .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
+        .orderBy('created_at', 'desc')
+        .paginate(page, limit)
+      return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: response }
+    } catch (error) {
+      return response.badRequest({ key: target, error: ObjectResponseTypeError.IndexError })
+    }
   }
 }

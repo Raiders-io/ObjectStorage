@@ -21,6 +21,7 @@ export enum ObjectResponseTypeError {
   NotFound = 'Object not found',
   FileNameMismatch = 'File name does not match the provided file id',
   InvalidUserID = 'Invalid user id',
+  NoUserID = 'Please provide a user id',
 
   // Routes messages Error
   IndexError = 'Failed to fetch objects',

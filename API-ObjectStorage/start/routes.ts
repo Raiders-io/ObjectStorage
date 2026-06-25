@@ -41,6 +41,7 @@ router
         router.delete('/:id', [controllers.AccessObjects, 'destroy']).as('deleteObject')
         // Special routes
         router.get('show/:userid/:id', [controllers.AccessObjects, 'showFrom']).as('getObjectFrom')
+        router.get('index/:userid/', [controllers.AccessObjects, 'indexFrom']).as('listObjectsFrom')
         router
           .put('/visibility/:id/:state', [controllers.AccessObjects, 'updateVisibility'])
           .as('updateObjectVisibility')
