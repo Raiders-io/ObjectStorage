@@ -29,7 +29,7 @@ export enum ObjectResponseTypeError {
   UploadAlreadyExists = 'File already exists, use update if you want to replace it',
   UpdateError = 'Failed to update file',
   DeleteError = 'Failed to delete file',
-  InvalidVisibilityState = 'Invalid visibility state, must be one of: public, private, shared',
+  InvalidVisibilityState = 'Invalid visibility state, must be one of: private, public, shared',
 }
 
 // Routes messages Success
