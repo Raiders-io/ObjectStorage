@@ -7,12 +7,12 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table
-        .integer('user_id')
+        .uuid('user_id')
         .notNullable()
-        .unsigned()
-        .references('id')
-        .inTable('users')
-        .onDelete('CASCADE')
+        // .unsigned()
+        // .references('id')
+        // .inTable('users')
+        // .onDelete('CASCADE')
       table.bigInteger('storage_bytes').unsigned().notNullable().defaultTo(0)
       table.bigInteger('storage_bytes_limit').unsigned().notNullable().defaultTo(1073741824) // 1 GB //TODO : Make this configurable per user
       table.bigInteger('object_count').unsigned().notNullable().defaultTo(0)

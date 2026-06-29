@@ -9,12 +9,12 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table
-        .integer('owner_id')
+        .uuid('owner_id')
         .notNullable()
-        .unsigned()
-        .references('id')
-        .inTable('users')
-        .onDelete('CASCADE')
+        // .unsigned()
+        // .references('id')
+        // .inTable('users')
+        // .onDelete('CASCADE')
       table.string('key').notNullable().unique()
       table.string('bucket').notNullable().defaultTo(env.get('S3_BUCKET'))
       table.string('name').notNullable()
