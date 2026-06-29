@@ -8,13 +8,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table
-        .uuid('owner_id')
-        .notNullable()
-        // .unsigned()
-        // .references('id')
-        // .inTable('users')
-        // .onDelete('CASCADE')
+      table.uuid('owner_id').notNullable()
       table.string('key').notNullable().unique()
       table.string('bucket').notNullable().defaultTo(env.get('S3_BUCKET'))
       table.string('name').notNullable()

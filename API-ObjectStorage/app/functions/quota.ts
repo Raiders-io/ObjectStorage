@@ -35,7 +35,7 @@ function createQuotaUsage(quota: Quota, resetCount?: boolean): QuotaUsage {
   }
 }
 
-async function getOrCreateQuota(userId: number): Promise<Quota> {
+async function getOrCreateQuota(userId: string): Promise<Quota> {
   const existingQuota = await Quota.query().where('user_id', userId).first()
 
   if (existingQuota) {
@@ -45,7 +45,7 @@ async function getOrCreateQuota(userId: number): Promise<Quota> {
   return await Quota.create({ userId })
 }
 
-async function resetDailyCounts(userId: number): Promise<QuotaUsage> {
+async function resetDailyCounts(userId: string): Promise<QuotaUsage> {
   await getOrCreateQuota(userId)
   const quotaRow = await Quota.query()
     .select(
@@ -96,11 +96,11 @@ async function resetDailyCounts(userId: number): Promise<QuotaUsage> {
   return createQuotaUsage(quotaRow, true)
 }
 
-export async function QuotaGetUserQuota(userId: number): Promise<QuotaUsage | null> {
+export async function QuotaGetUserQuota(userId: string): Promise<QuotaUsage | null> {
   return await resetDailyCounts(userId)
 }
 
-export async function QuotaTryToUpload(userId: number, newObjectSize: bigint) {
+export async function QuotaTryToUpload(userId: string, newObjectSize: bigint) {
   const quotaUsage = await QuotaGetUserQuota(userId)
   if (!quotaUsage) {
     throw new Error('Failed to fetch user quotaUsage')
@@ -124,7 +124,7 @@ export async function QuotaTryToUpload(userId: number, newObjectSize: bigint) {
     })
 }
 
-export async function QuotaVerifyForUpdate(userId: number, newObjectSize: bigint) {
+export async function QuotaVerifyForUpdate(userId: string, newObjectSize: bigint) {
   const quotaUsage = await QuotaGetUserQuota(userId)
   if (!quotaUsage) {
     throw new Error('Failed to fetch user quotaUsage')
@@ -146,7 +146,7 @@ export async function QuotaVerifyForUpdate(userId: number, newObjectSize: bigint
  * If the quota is exceeded, we should delete the temporary file and return an error.
  *  */
 export async function QuotaTryToUpdate(
-  userId: number,
+  userId: string,
   newObjectSize: bigint,
   oldObjectSize: bigint
 ) {
@@ -171,7 +171,7 @@ export async function QuotaTryToUpdate(
     })
 }
 
-export async function QuotaTryToDownload(userId: number) {
+export async function QuotaTryToDownload(userId: string) {
   const quotaUsage = await QuotaGetUserQuota(userId)
   if (!quotaUsage) {
     throw new Error('Failed to fetch user quotaUsage')
@@ -189,7 +189,7 @@ export async function QuotaTryToDownload(userId: number) {
     })
 }
 
-export async function QuotaTryToDelete(userId: number, objectSize: bigint) {
+export async function QuotaTryToDelete(userId: string, objectSize: bigint) {
   const quotaUsage = await QuotaGetUserQuota(userId)
   if (!quotaUsage) {
     throw new Error('Failed to fetch user quota')

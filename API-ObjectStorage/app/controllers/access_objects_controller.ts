@@ -21,8 +21,9 @@ const diskName = 's3'
 const disk = drive.use(diskName)
 
 export default class AccessObjectsController {
-  async index({ auth, request, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async index({ request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     const page = request.input('page', 1)
     let limit = request.input('limit', 10)
@@ -31,7 +32,7 @@ export default class AccessObjectsController {
 
     try {
       const response = await Object.query()
-        .where('owner_id', user.id)
+        .where('owner_id', userId)
         .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
@@ -41,8 +42,9 @@ export default class AccessObjectsController {
     }
   }
 
-  async store({ auth, request, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async store({ request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     const payload = await request.validateUsing(FilesValidator)
 
@@ -54,10 +56,10 @@ export default class AccessObjectsController {
 
     for (const file of payload.files) {
       const fileName = `${file.clientName}`
-      const s3Path = `files/${user.id}/${fileName}`
+      const s3Path = `files/${userId}/${fileName}`
 
       if (
-        (await Object.query().where('owner_id', user.id).where('key', s3Path).first()) ||
+        (await Object.query().where('owner_id', userId).where('key', s3Path).first()) ||
         (await disk.exists(s3Path))
       ) {
         objects.addError({ key: s3Path, error: ObjectResponseTypeError.UploadAlreadyExists })
@@ -65,7 +67,7 @@ export default class AccessObjectsController {
       }
 
       try {
-        await QuotaTryToUpload(user.id, BigInt(file.size))
+        await QuotaTryToUpload(userId, BigInt(file.size))
       } catch (error) {
         objects.addError({ key: s3Path, error: (error as Error).message })
         continue
@@ -74,7 +76,7 @@ export default class AccessObjectsController {
       const fileSave = await db.transaction(async (trx): Promise<boolean> => {
         await Object.create(
           {
-            ownerId: user.id,
+            ownerId: userId,
             key: s3Path,
             name: fileName,
             sizeBytes: file.size,
@@ -93,13 +95,13 @@ export default class AccessObjectsController {
       try {
         await file.moveToDisk(s3Path, diskName)
         await db.transaction(async () => {
-          await Object.query().where('owner_id', user.id).where('key', s3Path).update({
+          await Object.query().where('owner_id', userId).where('key', s3Path).update({
             status: StorageObjectUploadStatus.complete,
           })
         })
       } catch (error) {
         await db.transaction(async () => {
-          await Object.query().where('owner_id', user.id).where('key', s3Path).delete()
+          await Object.query().where('owner_id', userId).where('key', s3Path).delete()
         })
         objects.addError({ key: s3Path, error: ObjectResponseTypeError.UploadError })
         continue
@@ -112,18 +114,19 @@ export default class AccessObjectsController {
     return { objects: objects.get() }
   }
 
-  async show({ auth, params, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async show({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     try {
-      await QuotaTryToDownload(user.id)
+      await QuotaTryToDownload(userId)
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
 
-    const prefix = `files/${user.id}/${params.id}` // List only files for the authenticated user
+    const prefix = `files/${userId}/${params.id}` // List only files for the authenticated user
     if (
-      (await Object.query().where('owner_id', user.id).where('key', prefix).first()) ||
+      (await Object.query().where('owner_id', userId).where('key', prefix).first()) ||
       (await disk.exists(prefix))
     ) {
       const stream = await disk.getStream(prefix)
@@ -137,8 +140,9 @@ export default class AccessObjectsController {
     })
   }
 
-  async update({ auth, params, request, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async update({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     const payload = await request.validateUsing(FileValidator)
 
@@ -164,15 +168,15 @@ export default class AccessObjectsController {
     }
     const file = payload.file
     try {
-      await QuotaVerifyForUpdate(user.id, BigInt(file.size))
+      await QuotaVerifyForUpdate(userId, BigInt(file.size))
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
 
-    const prefix = `files/${user.id}/${params.id}`
+    const prefix = `files/${userId}/${params.id}`
     const query = await Object.query()
       .select('size_bytes')
-      .where('owner_id', user.id)
+      .where('owner_id', userId)
       .where('key', prefix)
       .first()
     if (!query || !(await disk.exists(prefix))) {
@@ -181,9 +185,9 @@ export default class AccessObjectsController {
         error: ObjectResponseTypeError.NotFound,
       })
     }
-    await QuotaTryToUpdate(user.id, BigInt(file.size), BigInt(query.sizeBytes))
+    await QuotaTryToUpdate(userId, BigInt(file.size), BigInt(query.sizeBytes))
     await db.transaction(async () => {
-      await Object.query().where('owner_id', user.id).where('key', prefix).update({
+      await Object.query().where('owner_id', userId).where('key', prefix).update({
         sizeBytes: file.size,
         mimeType: file.type,
         updatedAt: new Date(),
@@ -198,8 +202,9 @@ export default class AccessObjectsController {
     }
   }
 
-  async updateMany({ auth, request, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async updateMany({ request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     const payload = await request.validateUsing(FilesValidator)
 
@@ -214,25 +219,25 @@ export default class AccessObjectsController {
 
     for (const file of payload.files) {
       try {
-        await QuotaVerifyForUpdate(user.id, BigInt(file.size))
+        await QuotaVerifyForUpdate(userId, BigInt(file.size))
       } catch (error) {
         objects.addError({ key: file.clientName, error: (error as Error).message })
         continue
       }
 
-      const prefix = `files/${user.id}/${file.clientName}`
+      const prefix = `files/${userId}/${file.clientName}`
       const query = await Object.query()
         .select('size_bytes')
-        .where('owner_id', user.id)
+        .where('owner_id', userId)
         .where('key', prefix)
         .first()
       if (!query || !(await disk.exists(prefix))) {
         objects.addError({ key: file.clientName, error: ObjectResponseTypeError.NotFound })
         continue
       }
-      await QuotaTryToUpdate(user.id, BigInt(file.size), BigInt(query.sizeBytes))
+      await QuotaTryToUpdate(userId, BigInt(file.size), BigInt(query.sizeBytes))
       await db.transaction(async () => {
-        await Object.query().where('owner_id', user.id).where('key', prefix).update({
+        await Object.query().where('owner_id', userId).where('key', prefix).update({
           sizeBytes: file.size,
           mimeType: file.type,
           updatedAt: new Date(),
@@ -246,8 +251,9 @@ export default class AccessObjectsController {
     return { objects: objects.get() }
   }
 
-  async destroy({ auth, params, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async destroy({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     if (params.id === undefined) {
       return response.badRequest({
@@ -257,8 +263,8 @@ export default class AccessObjectsController {
     }
     const id = params.id
 
-    const prefix = `files/${user.id}/${id}`
-    const query = await Object.query().where('owner_id', user.id).where('key', prefix).first()
+    const prefix = `files/${userId}/${id}`
+    const query = await Object.query().where('owner_id', userId).where('key', prefix).first()
     if (!query || !(await disk.exists(prefix))) {
       return response.notFound({
         key: id,
@@ -266,12 +272,12 @@ export default class AccessObjectsController {
       })
     }
     try {
-      await QuotaTryToDelete(user.id, BigInt(query.sizeBytes))
+      await QuotaTryToDelete(userId, BigInt(query.sizeBytes))
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
     await disk.delete(prefix)
-    await Object.query().where('owner_id', user.id).where('key', prefix).delete()
+    await Object.query().where('owner_id', userId).where('key', prefix).delete()
 
     return response.noContent({
       key: id,
@@ -279,8 +285,9 @@ export default class AccessObjectsController {
     })
   }
 
-  async destroyMany({ auth, request, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async destroyMany({ request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     const ids = request.input('ids') as string[] | undefined
 
@@ -294,15 +301,15 @@ export default class AccessObjectsController {
     const objects = new ObjectResponseType()
 
     for (const id of ids) {
-      const prefix = `files/${user.id}/${id}`
-      const query = await Object.query().where('owner_id', user.id).where('key', prefix).first()
+      const prefix = `files/${userId}/${id}`
+      const query = await Object.query().where('owner_id', userId).where('key', prefix).first()
       if (!query || !(await disk.exists(prefix))) {
         objects.addError({ key: id, error: ObjectResponseTypeError.NotFound })
         continue
       }
 
       try {
-        await QuotaTryToDelete(user.id, BigInt(query.sizeBytes))
+        await QuotaTryToDelete(userId, BigInt(query.sizeBytes))
       } catch (error) {
         return response.badRequest({
           key: 'ids',
@@ -311,15 +318,16 @@ export default class AccessObjectsController {
       }
 
       await disk.delete(prefix)
-      await Object.query().where('owner_id', user.id).where('key', prefix).delete()
+      await Object.query().where('owner_id', userId).where('key', prefix).delete()
       objects.addSuccess({ key: id, message: ObjectResponseTypeSuccess.DeleteSuccess })
     }
 
     return { objects: objects.get() }
   }
 
-  async updateInfo({ auth, params, request, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async updateInfo({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     if (params.id === undefined) {
       return response.badRequest({ key: 'file?', error: ObjectResponseTypeError.NoFileID })
@@ -329,9 +337,9 @@ export default class AccessObjectsController {
     if (!visibilityState || !(visibilityState in StorageObjectVisibility)) {
       return response.badRequest({ key: id, error: ObjectResponseTypeError.InvalidVisibilityState })
     }
-    const prefix = `files/${user.id}/${id}`
+    const prefix = `files/${userId}/${id}`
     try {
-      const result = await Object.query().where('owner_id', user.id).where('key', prefix).update({
+      const result = await Object.query().where('owner_id', userId).where('key', prefix).update({
         visibility: visibilityState,
         updatedAt: new Date(),
       })
@@ -348,8 +356,9 @@ export default class AccessObjectsController {
   }
 
   // Special routes for Accessing objects from other users
-  async indexFrom({ auth, params, request, response }: HttpContext) {
-    auth.getUserOrFail()
+  async indexFrom({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     if (!params.userid) {
       return response.badRequest({
@@ -375,11 +384,12 @@ export default class AccessObjectsController {
     }
   }
 
-  async showFrom({ auth, params, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async showFrom({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
 
     try {
-      await QuotaTryToDownload(user.id)
+      await QuotaTryToDownload(userId)
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
