@@ -5,9 +5,5 @@
 
 export const controllers = {
   AccessObjects: () => import('#controllers/access_objects_controller'),
-  AccessTokens: () => import('#controllers/access_tokens_controller'),
-  NewAccount: () => import('#controllers/new_account_controller'),
-  ProfileAvatars: () => import('#controllers/profile_avatars_controller'),
-  Profile: () => import('#controllers/profile_controller'),
   Quotas: () => import('#controllers/quotas_controller'),
 }

@@ -36,8 +36,7 @@ router.use([
   () => import('@adonisjs/core/bodyparser_middleware'),
   () => import('@adonisjs/session/session_middleware'),
   () => import('@adonisjs/shield/shield_middleware'),
-  () => import('@adonisjs/auth/initialize_auth_middleware'),
-  () => import('#middleware/silent_auth_middleware'),
+  // () => import('#middleware/silent_auth_middleware'),
 ])
 
 /**
@@ -47,6 +46,4 @@ router.use([
 export const middleware = router.named({
   verifyToken: () => import('#middleware/verify_token_middleware'),
   cleanupUploads: () => import('#middleware/cleanup_uploads_middleware'),
-  guest: () => import('#middleware/guest_middleware'),
-  auth: () => import('#middleware/auth_middleware'),
 })
