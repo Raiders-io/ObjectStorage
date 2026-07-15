@@ -1,28 +1,11 @@
 # Quotas
 
+Quotas contains Users's statistics of their usage of this API. 
+It handles:
+- the number of different files (a huge number of small files can be heavier on disk than some big files).
+- A maximum allowed storage space by user, and rate limit of actions on theses objects, download and upload.
+
 ## Quota
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant API as API
-    participant DB@{ "type" : "database" }
-    User->>API: POST /anything
-    activate API
-    API->>DB: Read User Rate Limit
-    activate DB
-    DB->>API: Send User Rate Limit
-    deactivate DB
-    API->>API: Validate Rate Limit
-    API->>DB: Update Rate Limit
-    activate DB
-    deactivate DB
-    API->>API: Execute request
-    API->>User: OK
-    deactivate API
-```
-
----
 
 ```mermaid
 sequenceDiagram
@@ -43,24 +26,6 @@ sequenceDiagram
     API->>User: OK
     deactivate API
 ```
-
-```rules
-si current_date > upload_count_reset_at | download_count_reset_at
-	update to current
-
-si upload_count >= upload_count_limit | download_count >= download_count_limit
-	reject
-
-si object_count >= object_count_limit
-	reject
-
-si new file + storage_bytes >= storage_bytes_limit
-	reject
-
-OK
-```
-
-## Rate limiting
 
 ## References
 
