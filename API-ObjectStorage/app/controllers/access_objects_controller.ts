@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { FilesValidator, FileValidator } from '#validators/file'
-import drive from '@adonisjs/drive/services/main'
 import Object from '#models/object'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import db from '@adonisjs/lucid/services/db'
@@ -10,16 +9,13 @@ import {
   QuotaTryToDownload,
   QuotaTryToUpdate,
   QuotaTryToDelete,
-} from '#functions/quota'
+} from '#services/quota'
 import {
   ObjectResponseType,
   ObjectResponseTypeSuccess,
   ObjectResponseTypeError,
 } from '#class/objects'
-
-// TODO: disk should be the same everywhere to avoid confusions
-const diskName = 's3'
-const disk = drive.use(diskName)
+import { disk, diskName, calculatePrefix } from '#services/disk'
 
 export default class AccessObjectsController {
   async index({ request, response }: HttpContext) {
@@ -125,8 +121,7 @@ export default class AccessObjectsController {
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
-    // TODO: prefix should be precalculated, to avoid confusions
-    const prefix = `files/${userId}/${params.id}` // List only files for the authenticated user
+    const prefix = calculatePrefix(userId, params.id) // List only files for the authenticated user
     if (
       (await Object.query().where('owner_id', userId).where('key', prefix).first()) ||
       (await disk.exists(prefix))
@@ -175,7 +170,7 @@ export default class AccessObjectsController {
       return response.badRequest((error as Error).message)
     }
 
-    const prefix = `files/${userId}/${params.id}`
+    const prefix = calculatePrefix(userId, params.id)
     const query = await Object.query()
       .select('size_bytes')
       .where('owner_id', userId)
@@ -227,7 +222,7 @@ export default class AccessObjectsController {
         continue
       }
 
-      const prefix = `files/${userId}/${file.clientName}`
+      const prefix = calculatePrefix(userId, file.clientName)
       const query = await Object.query()
         .select('size_bytes')
         .where('owner_id', userId)
@@ -265,7 +260,7 @@ export default class AccessObjectsController {
     }
     const id = params.id
 
-    const prefix = `files/${userId}/${id}`
+    const prefix = calculatePrefix(userId, id)
     const query = await Object.query().where('owner_id', userId).where('key', prefix).first()
     if (!query || !(await disk.exists(prefix))) {
       return response.notFound({
@@ -303,7 +298,7 @@ export default class AccessObjectsController {
     const objects = new ObjectResponseType()
 
     for (const id of ids) {
-      const prefix = `files/${userId}/${id}`
+      const prefix = calculatePrefix(userId, id)
       const query = await Object.query().where('owner_id', userId).where('key', prefix).first()
       if (!query || !(await disk.exists(prefix))) {
         objects.addError({ key: id, error: ObjectResponseTypeError.NotFound })
@@ -339,7 +334,7 @@ export default class AccessObjectsController {
     if (!visibilityState || !(visibilityState in StorageObjectVisibility)) {
       return response.badRequest({ key: id, error: ObjectResponseTypeError.InvalidVisibilityState })
     }
-    const prefix = `files/${userId}/${id}`
+    const prefix = calculatePrefix(userId, id)
     try {
       const result = await Object.query().where('owner_id', userId).where('key', prefix).update({
         visibility: visibilityState,
@@ -401,7 +396,7 @@ export default class AccessObjectsController {
         error: ObjectResponseTypeError.InvalidUserID,
       })
     }
-    const prefix = `files/${params.userid}/${params.id}`
+    const prefix = calculatePrefix(params.userid, params.id)
     try {
       if (
         (await Object.query()

@@ -1,10 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Object from '#models/object'
 import Quota from '#models/quota'
-import drive from '@adonisjs/drive/services/main'
-
-const diskName = 's3'
-const disk = drive.use(diskName)
+import { calculatePrefix, disk } from '#services/disk'
 
 export default class DataAccessesController {
   /**
@@ -60,7 +57,7 @@ export default class DataAccessesController {
     try {
       quotaResponse = await Quota.query().where('user_id', userId).delete()
     } catch (error) {}
-    const prefix = `files/${userId}/`
+    const prefix = calculatePrefix(userId)
     await disk.deleteAll(prefix)
     const res = {
       status: objectResponse && quotaResponse ? 'ok' : 'error',
