@@ -5,5 +5,6 @@
 
 export const controllers = {
   AccessObjects: () => import('#controllers/access_objects_controller'),
+  DataAccesses: () => import('#controllers/data_accesses_controller'),
   Quotas: () => import('#controllers/quotas_controller'),
 }

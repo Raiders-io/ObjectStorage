@@ -83,6 +83,15 @@ router
       .use(middleware.verifyToken())
       .prefix('/quota')
       .as('quota')
+
+    router
+      .group(() => {
+        router.get('/', [controllers.DataAccesses, 'index']).as('indexALL')
+        router.delete('/', [controllers.DataAccesses, 'destroy']).as('deleteALL')
+      })
+      .prefix('/all')
+      .as('all')
+      .use(middleware.verifyToken())
   })
   .prefix('/api/v1/storage')
   .as('storage')

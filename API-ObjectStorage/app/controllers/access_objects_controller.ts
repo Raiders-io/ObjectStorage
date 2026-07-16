@@ -17,6 +17,7 @@ import {
   ObjectResponseTypeError,
 } from '#class/objects'
 
+// TODO: disk should be the same everywhere to avoid confusions
 const diskName = 's3'
 const disk = drive.use(diskName)
 
@@ -31,12 +32,13 @@ export default class AccessObjectsController {
     else if (limit > 100) limit = 100
 
     try {
-      const response = await Object.query()
+      const result = await Object.query()
         .where('owner_id', userId)
         .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
-      return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: response }
+      if (!result) throw new Error('Index Query')
+      return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: result }
     } catch (error) {
       return response.badRequest({ error: ObjectResponseTypeError.IndexError })
     }
@@ -123,7 +125,7 @@ export default class AccessObjectsController {
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
-
+    // TODO: prefix should be precalculated, to avoid confusions
     const prefix = `files/${userId}/${params.id}` // List only files for the authenticated user
     if (
       (await Object.query().where('owner_id', userId).where('key', prefix).first()) ||
@@ -372,13 +374,13 @@ export default class AccessObjectsController {
     if (limit < 0) limit = 1
     else if (limit > 100) limit = 100
     try {
-      const response = await Object.query()
+      const result = await Object.query()
         .where('owner_id', targetUser)
         .where('visibility', 'public')
         .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
-      return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: response }
+      return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: result }
     } catch (error) {
       return response.badRequest({ key: targetUser, error: ObjectResponseTypeError.IndexError })
     }
