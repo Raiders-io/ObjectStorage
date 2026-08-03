@@ -47,4 +47,12 @@ export default await Env.create(new URL('../', import.meta.url), {
   POSTGRES_USER: Env.schema.string(),
   POSTGRES_PASSWORD: Env.schema.string(),
   POSTGRES_DB: Env.schema.string(),
+
+  /*
+  |--------------------------------------------------------------------------
+  | Variables for configuring RabbitMQ
+  |--------------------------------------------------------------------------
+  */
+  RABBITMQ_DEFAULT_USER: Env.schema.string(),
+  RABBITMQ_DEFAULT_PASS: Env.schema.string(),
 })
