@@ -25,17 +25,42 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:?}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
       - POSTGRES_DB=${POSTGRES_DB:?}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:?}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:?}
     depends_on:
       postgresql:
        condition: service_healthy
       garage:
        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - basic-network
       - api-network
     ports:
       - "3334:3333"
     restart: always
+
+  rabbitmq:
+    image: rabbitmq:4.3.4-management-alpine
+    container_name: object-rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672 # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:?}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:?}
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq/
+      - rabbitmq-log:/var/log/rabbitmq
+    networks:
+      - basic-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 30s
+      retries: 6
 
   garage:
     container_name: object-storage
@@ -97,3 +122,5 @@ volumes:
   object-db-data:
   object-storage-data:
   object-storage-meta:
+  rabbitmq-lib:
+  rabbitmq-log:

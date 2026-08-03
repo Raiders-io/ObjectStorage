@@ -53,6 +53,7 @@ export default defineConfig({
     () => import('@adonisjs/cors/cors_provider'),
     () => import('#providers/api_provider'),
     () => import('@adonisjs/drive/drive_provider'),
+    () => import('#providers/message_broker_provider'),
   ],
 
   /*

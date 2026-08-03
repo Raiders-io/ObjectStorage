@@ -10,9 +10,16 @@
 import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import { controllers } from '#generated/controllers'
+import app from '@adonisjs/core/services/app'
 
 // TODO: example route needs to be deleted
-router.get('/', () => {
+router.get('/', async () => {
+  const pub = await app.container.make('rabbitmq.publisher')
+  await pub.send(
+    { exchange: 'my-events', routingKey: 'users.visit' }, // metadata
+    { id: 1, name: 'Alan Turing' } // message content
+  )
+  await pub.send('user-events', { id: 1, name: 'Alan Turing2' })
   return { hello: 'world' }
 })
 
