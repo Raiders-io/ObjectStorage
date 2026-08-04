@@ -18,11 +18,11 @@ import {
   type ObjectSuccess,
 } from '#class/objects'
 import { getDisk, diskName, calculatePrefix } from '#services/disk'
-
 import { QuotaError } from '#class/quota'
 import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
 import { mime } from '@adonisjs/core/http/helpers'
 import { downloadLogic } from '#services/access_object_service'
+import app from '@adonisjs/core/services/app'
 
 export default class AccessObjectsController {
   async index({
@@ -46,6 +46,11 @@ export default class AccessObjectsController {
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
       if (!result) throw new Error('Index Query')
+      const pub = await app.container.make('rabbitmq.publisher')
+      await pub.send(
+        { exchange: 'object', routingKey: 'object.index' }, // metadata
+        { userId: userId, from: userId } // message content
+      )
       return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: result }
     } catch (error) {
       return response.badRequest(ObjectResponseTypeError.IndexError)
@@ -130,6 +135,11 @@ export default class AccessObjectsController {
         continue
       }
       objects.addSuccess({ key: s3Path, message: ObjectResponseTypeSuccess.UploadSuccess })
+      const pub = await app.container.make('rabbitmq.publisher')
+      await pub.send(
+        { exchange: 'object', routingKey: 'object.store' },
+        { userId: userId, obj: fileName }
+      )
     }
     if (objects.length === 0) {
       return response.internalServerError(ObjectResponseTypeError.UploadError)
@@ -309,6 +319,12 @@ export default class AccessObjectsController {
     }
     await getDisk().delete(prefix)
     await Object.query().where('owner_id', userId).where('key', prefix).delete()
+
+    const pub = await app.container.make('rabbitmq.publisher')
+    await pub.send(
+      { exchange: 'object', routingKey: 'object.destroy' },
+      { userId: userId, obj: filename }
+    )
 
     return response.noContent({
       key: filename,

@@ -27,6 +27,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:?}
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:?}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:?}
+      - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME:?}
     depends_on:
       postgresql:
        condition: service_healthy
@@ -37,6 +38,7 @@ services:
     networks:
       - basic-network
       - api-network
+      - public-network
     ports:
       - "3334:3333"
     restart: always
@@ -55,7 +57,7 @@ services:
       - rabbitmq-lib:/var/lib/rabbitmq/
       - rabbitmq-log:/var/log/rabbitmq
     networks:
-      - basic-network
+      - api-network
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 10s

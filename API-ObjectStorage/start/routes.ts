@@ -16,10 +16,10 @@ import app from '@adonisjs/core/services/app'
 router.get('/', async () => {
   const pub = await app.container.make('rabbitmq.publisher')
   await pub.send(
-    { exchange: 'my-events', routingKey: 'users.visit' }, // metadata
+    { exchange: 'object', routingKey: 'object.test' }, // metadata
     { id: 1, name: 'Alan Turing' } // message content
   )
-  await pub.send('user-events', { id: 1, name: 'Alan Turing2' })
+  await pub.send('object-events', { id: 1, name: 'Alan Turing2' })
   return { hello: 'world' }
 })
 

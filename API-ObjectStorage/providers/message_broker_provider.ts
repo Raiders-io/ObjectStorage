@@ -1,16 +1,13 @@
 import type { ApplicationService } from '@adonisjs/core/types'
 import { Connection, Publisher, Consumer } from 'rabbitmq-client'
 import env from '#start/env'
+import { handleAsyncMessage, handleLogMessage } from '#services/message_broker_service'
 
-/**
- * Déclaration des bindings du conteneur pour avoir
- * l'autocomplétion et le typage correct partout dans l'app
- */
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {
     'rabbitmq': Connection
     'rabbitmq.publisher': Publisher
-    'rabbitmq.consumer': Consumer
+    'rabbitmq.consumer.auth': Consumer
   }
 }
 
@@ -23,24 +20,21 @@ export default class MessageBrokerProvider {
   register() {
     this.app.container.singleton('rabbitmq', async () => {
       return new Connection(
-        `amqp://${env.get('RABBITMQ_DEFAULT_USER')}:${env.get('RABBITMQ_DEFAULT_PASS')}@rabbitmq:5672`
+        `amqp://${env.get('RABBITMQ_DEFAULT_USER')}:${env.get('RABBITMQ_DEFAULT_PASS')}@${env.get('RABBITMQ_HOSTNAME')}:5672`
       )
     })
 
-    this.app.container.singleton('rabbitmq.consumer', async () => {
+    this.app.container.singleton('rabbitmq.consumer.auth', async () => {
       const rabbit = await this.app.container.make('rabbitmq')
       return rabbit.createConsumer(
         {
-          queue: 'user-events',
+          queue: 'object-events',
           queueOptions: { durable: true },
           qos: { prefetchCount: 2 },
-          exchanges: [{ exchange: 'my-events', type: 'topic' }],
-          queueBindings: [{ exchange: 'my-events', routingKey: 'users.*' }],
+          exchanges: [{ exchange: 'auth', type: 'topic' }],
+          queueBindings: [{ exchange: 'auth', routingKey: 'auth.user.*' }],
         },
-        async (msg) => {
-          console.log('received message (user-events)', msg)
-          console.log('message content is ', msg.body)
-        }
+        handleAsyncMessage
       )
     })
 
@@ -49,7 +43,7 @@ export default class MessageBrokerProvider {
       return rabbit.createPublisher({
         confirm: true,
         maxAttempts: 2,
-        exchanges: [{ exchange: 'my-events', type: 'topic' }],
+        exchanges: [{ exchange: 'object', type: 'topic' }],
       })
     })
   }
@@ -71,14 +65,14 @@ export default class MessageBrokerProvider {
     const rabbit = await this.app.container.make('rabbitmq')
 
     rabbit.on('error', (err) => {
-      console.log('RabbitMQ connection error', err)
+      handleLogMessage(`RabbitMQ connection error: ${err}`)
     })
 
     rabbit.on('connection', () => {
-      console.log('Connection successfully (re)established')
+      handleLogMessage(`RabbitMQ connected to ${env.get('RABBITMQ_HOSTNAME')}:5672`)
     })
     await this.app.container.make('rabbitmq.publisher')
-    await this.app.container.make('rabbitmq.consumer')
+    await this.app.container.make('rabbitmq.consumer.auth')
   }
 
   /**
@@ -89,7 +83,7 @@ export default class MessageBrokerProvider {
     const pub = await this.app.container.make('rabbitmq.publisher')
     await pub.close()
 
-    const sub = await this.app.container.make('rabbitmq.consumer')
+    const sub = await this.app.container.make('rabbitmq.consumer.auth')
     await sub.close()
 
     const rabbit = await this.app.container.make('rabbitmq')
