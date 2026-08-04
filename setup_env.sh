@@ -22,6 +22,9 @@ create_env()
 	cd -
 	sed -i "s|^\(GARAGE_DEFAULT_SECRET_KEY=\).*|\1$(openssl rand -hex 32)|" .env
 	sed -i "s|^\(GARAGE_DEFAULT_ACCESS_KEY=\).*|\1$(openssl rand -hex 16)|" .env
+
+	sed -i "s|^\(RABBITMQ_DEFAULT_USER=\).*|\1$(openssl rand -hex 16)|" .env
+	sed -i "s|^\(RABBITMQ_DEFAULT_PASS=\).*|\1$(openssl rand -hex 16)|" .env
 }
 
 configure_postgres()

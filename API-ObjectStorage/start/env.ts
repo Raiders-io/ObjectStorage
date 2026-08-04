@@ -55,4 +55,5 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   RABBITMQ_DEFAULT_USER: Env.schema.string(),
   RABBITMQ_DEFAULT_PASS: Env.schema.string(),
+  RABBITMQ_HOSTNAME: Env.schema.string(),
 })
