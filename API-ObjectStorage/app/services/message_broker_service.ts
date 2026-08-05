@@ -1,7 +1,7 @@
 import { AsyncMessage, ConsumerStatus } from 'rabbitmq-client'
 import { deleteAllObjectsForUser } from '#services/access_object_service'
 
-export async function handleAsyncMessage(msg: AsyncMessage) {
+export async function handleAsyncMessage(msg: AsyncMessage): Promise<ConsumerStatus> {
   try {
     switch (msg.routingKey) {
       // case 'auth.user.created':
@@ -13,7 +13,7 @@ export async function handleAsyncMessage(msg: AsyncMessage) {
         break
       default:
         console.log('unknown event received')
-        return
+        return ConsumerStatus.DROP
     }
     // console.log('received message ', msg)
     // console.log('message content is ', msg.body)
