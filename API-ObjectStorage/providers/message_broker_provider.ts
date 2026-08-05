@@ -29,8 +29,15 @@ export default class MessageBrokerProvider {
       return rabbit.createConsumer(
         {
           queue: 'object-events',
-          queueOptions: { durable: true },
+          queueOptions: {
+            durable: true,
+            arguments: {
+              'x-dead-letter-exchange': 'object-events-dlx',
+              'x-dead-letter-routing-key': 'object-events-dlq',
+            },
+          },
           qos: { prefetchCount: 2 },
+          requeue: false,
           exchanges: [{ exchange: 'auth', type: 'topic' }],
           queueBindings: [{ exchange: 'auth', routingKey: 'auth.user.*' }],
         },
