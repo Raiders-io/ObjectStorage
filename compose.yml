@@ -33,6 +33,7 @@ services:
     networks:
       - basic-network
       - api-network
+      - public-network
     ports:
       - "3334:3333"
     restart: always
@@ -91,6 +92,8 @@ networks:
     driver: bridge
     internal: true
   api-network:
+    external: true
+  public-network:
     external: true
 
 volumes:

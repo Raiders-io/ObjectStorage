@@ -73,6 +73,7 @@
     "@japa/api-client": "^3.2.1",
     "@tuyau/core": "^1.2.2",
     "@vinejs/vine": "^4.3.1",
+    "@yosone/broker": "^1.0.5",
     "better-sqlite3": "^12.9.0",
     "luxon": "~3.4.4",
     "mime-types": "^3.0.2",
