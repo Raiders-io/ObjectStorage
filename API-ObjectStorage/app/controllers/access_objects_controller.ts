@@ -14,11 +14,20 @@ import {
   ObjectResponseType,
   ObjectResponseTypeSuccess,
   ObjectResponseTypeError,
+  type ObjectError,
+  type ObjectSuccess,
 } from '#class/objects'
 import { getDisk, diskName, calculatePrefix } from '#services/disk'
 
+import { QuotaError } from '#class/quota'
+
 export default class AccessObjectsController {
-  async index({ request, response }: HttpContext) {
+  async index({
+    request,
+    response,
+  }: HttpContext): Promise<
+    { message: string; objects: any } | { __response: string; __status: number }
+  > {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
@@ -36,11 +45,16 @@ export default class AccessObjectsController {
       if (!result) throw new Error('Index Query')
       return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: result }
     } catch (error) {
-      return response.badRequest({ error: ObjectResponseTypeError.IndexError })
+      return response.badRequest(ObjectResponseTypeError.IndexError)
     }
   }
 
-  async store({ request, response }: HttpContext) {
+  async store({
+    request,
+    response,
+  }: HttpContext): Promise<
+    { objects: (ObjectError | ObjectSuccess)[] } | { __response: string; __status: number }
+  > {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
@@ -167,7 +181,11 @@ export default class AccessObjectsController {
     try {
       await QuotaVerifyForUpdate(userId, BigInt(file.size))
     } catch (error) {
-      return response.badRequest((error as Error).message)
+      console.log('QuotaVerifyForUpdate error:', (error as Error).message)
+      return response.badRequest({
+        key: params.id,
+        error: QuotaError.NoUpdateRemaining,
+      })
     }
 
     const prefix = calculatePrefix(userId, params.id)
