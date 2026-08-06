@@ -22,6 +22,7 @@ import { QuotaError } from '#class/quota'
 import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
 import { mime } from '@adonisjs/core/http/helpers'
 import { downloadLogic, searchLogic } from '#services/access_object_service'
+import { publish } from '@yosone/broker'
 
 export default class AccessObjectsController {
   async index({
@@ -129,6 +130,10 @@ export default class AccessObjectsController {
         continue
       }
       objects.addSuccess({ key: s3Path, message: ObjectResponseTypeSuccess.UploadSuccess })
+      publish('object.events', {
+        type: 'object.file.created',
+        payload: { userId: userId, file: fileName },
+      })
     }
     if (objects.length === 0) {
       return response.internalServerError(ObjectResponseTypeError.UploadError)
@@ -222,6 +227,10 @@ export default class AccessObjectsController {
 
     await file.moveToDisk(prefix, diskName)
 
+    publish('object.events', {
+      type: 'object.file.updated',
+      payload: { userId: userId, file: file.clientName },
+    })
     return {
       key: filename,
       message: ObjectResponseTypeSuccess.UpdateSuccess,
@@ -280,6 +289,10 @@ export default class AccessObjectsController {
             updatedAt: new Date(),
           })
       })
+      publish('object.events', {
+        type: 'object.file.updated',
+        payload: { userId: userId, file: file.clientName },
+      })
 
       await file.moveToDisk(prefix, diskName)
       objects.addSuccess({ key: filename, message: ObjectResponseTypeSuccess.UpdateSuccess })
@@ -316,7 +329,10 @@ export default class AccessObjectsController {
     }
     await getDisk().delete(prefix)
     await Object.query().where('owner_id', userId).where('key', prefix).delete()
-
+    publish('object.events', {
+      type: 'object.file.deleted',
+      payload: { userId: userId, file: filename },
+    })
     return response.noContent({
       key: filename,
       message: ObjectResponseTypeSuccess.DeleteSuccess,
@@ -366,6 +382,10 @@ export default class AccessObjectsController {
       await getDisk().delete(prefix)
       await Object.query().where('owner_id', userId).where('key', prefix).delete()
       objects.addSuccess({ key: filename, message: ObjectResponseTypeSuccess.DeleteSuccess })
+      publish('object.events', {
+        type: 'object.file.deleted',
+        payload: { userId: userId, file: filename },
+      })
     }
 
     return { objects: objects.get() }
@@ -392,16 +412,20 @@ export default class AccessObjectsController {
         visibility: visibilityState,
         updatedAt: new Date(),
       })
+      publish('object.events', {
+        type: 'object.file.visibility.updated',
+        payload: { userId: userId, file: filename, visibility: visibilityState },
+      })
       if (result.length > 0 && result[0] > 0) {
         return {
           key: filename,
           message: ObjectResponseTypeSuccess.UpdateVisibilitySuccess,
         }
       }
-    } catch (error) {
+    } catch (e) {
+    } finally {
       return response.badRequest({ key: filename, error: ObjectResponseTypeError.IndexError })
     }
-    return response.badRequest({ key: filename, error: ObjectResponseTypeError.IndexError })
   }
 
   // Special routes for Accessing objects from other users
