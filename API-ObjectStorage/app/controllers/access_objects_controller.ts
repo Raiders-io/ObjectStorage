@@ -20,6 +20,7 @@ import {
 import { getDisk, diskName, calculatePrefix } from '#services/disk'
 
 import { QuotaError } from '#class/quota'
+import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
 
 export default class AccessObjectsController {
   async index({
@@ -67,7 +68,14 @@ export default class AccessObjectsController {
     const objects = new ObjectResponseType()
 
     for (const file of payload.files) {
-      const fileName = `${file.clientName}`
+      const fileName = sanitizeFilename(file.clientName)
+      if (fileName === undefined && payload.files.length === 1)
+        return response.badRequest(ObjectResponseTypeError.InvalidFilename)
+
+      if (fileName === undefined) {
+        objects.addError({ key: file.clientName, error: ObjectResponseTypeError.NoFileID })
+        continue
+      }
       const s3Path = `files/${userId}/${fileName}`
 
       if (
@@ -135,18 +143,19 @@ export default class AccessObjectsController {
     } catch (error) {
       return response.badRequest((error as Error).message)
     }
-    const prefix = calculatePrefix(userId, params.id) // List only files for the authenticated user
+    const filename = sanitizeFilename(params.id)
+    const prefix = calculatePrefix(userId, filename) // List only files for the authenticated user
     if (
       (await Object.query().where('owner_id', userId).where('key', prefix).first()) ||
       (await getDisk().exists(prefix))
     ) {
       const stream = await getDisk().getStream(prefix)
-      response.header('Content-Disposition', `attachment; filename="${params.id}"`)
+      response.header('Content-Disposition', `attachment; filename="${filename}"`)
       response.header('Content-Type', 'application/octet-stream')
       return response.stream(stream)
     }
     return response.notFound({
-      key: params.id,
+      key: filename,
       error: ObjectResponseTypeError.NotFound,
     })
   }
@@ -157,23 +166,25 @@ export default class AccessObjectsController {
 
     const payload = await request.validateUsing(FileValidator)
 
+    const filename = sanitizeFilename(params.id)
+
     if (!payload || !payload.file) {
       return response.badRequest({
-        key: params.id,
+        key: filename,
         error: ObjectResponseTypeError.NoFileProvided,
       })
     }
 
-    if (params.id === undefined) {
+    if (filename === undefined) {
       return response.badRequest({
-        key: params.id,
+        key: filename,
         error: ObjectResponseTypeError.NoFileID,
       })
     }
 
-    if (params.id !== payload.file.clientName) {
+    if (filename !== payload.file.clientName) {
       return response.badRequest({
-        key: params.id,
+        key: filename,
         error: ObjectResponseTypeError.FileNameMismatch,
       })
     }
@@ -183,12 +194,12 @@ export default class AccessObjectsController {
     } catch (error) {
       console.log('QuotaVerifyForUpdate error:', (error as Error).message)
       return response.badRequest({
-        key: params.id,
+        key: filename,
         error: QuotaError.NoUpdateRemaining,
       })
     }
 
-    const prefix = calculatePrefix(userId, params.id)
+    const prefix = calculatePrefix(userId, filename)
     const query = await Object.query()
       .select('size_bytes')
       .where('owner_id', userId)
@@ -196,7 +207,7 @@ export default class AccessObjectsController {
       .first()
     if (!query || !(await getDisk().exists(prefix))) {
       return response.notFound({
-        key: params.id,
+        key: filename,
         error: ObjectResponseTypeError.NotFound,
       })
     }
@@ -212,7 +223,7 @@ export default class AccessObjectsController {
     await file.moveToDisk(prefix, diskName)
 
     return {
-      key: params.id,
+      key: filename,
       message: ObjectResponseTypeSuccess.UpdateSuccess,
     }
   }
@@ -233,21 +244,29 @@ export default class AccessObjectsController {
     const objects = new ObjectResponseType()
 
     for (const file of payload.files) {
+      const filename = sanitizeFilename(file.clientName)
+      if (filename === undefined) {
+        return response.badRequest({
+          key: file.clientName,
+          error: ObjectResponseTypeError.NoFileID,
+        })
+      }
       try {
         await QuotaVerifyForUpdate(userId, BigInt(file.size))
       } catch (error) {
-        objects.addError({ key: file.clientName, error: (error as Error).message })
+        objects.addError({ key: filename, error: QuotaError.NoUpdateRemaining })
+        console.log(`QuotaVerifyForUpdate from ${userId} error:`, (error as Error).message)
         continue
       }
 
-      const prefix = calculatePrefix(userId, file.clientName)
+      const prefix = calculatePrefix(userId, filename)
       const query = await Object.query()
         .select('size_bytes')
         .where('owner_id', userId)
         .where('key', prefix)
         .first()
       if (!query || !(await getDisk().exists(prefix))) {
-        objects.addError({ key: file.clientName, error: ObjectResponseTypeError.NotFound })
+        objects.addError({ key: filename, error: ObjectResponseTypeError.NotFound })
         continue
       }
       await QuotaTryToUpdate(userId, BigInt(file.size), BigInt(query.sizeBytes))
@@ -260,7 +279,7 @@ export default class AccessObjectsController {
       })
 
       await file.moveToDisk(prefix, diskName)
-      objects.addSuccess({ key: file.clientName, message: ObjectResponseTypeSuccess.UpdateSuccess })
+      objects.addSuccess({ key: filename, message: ObjectResponseTypeSuccess.UpdateSuccess })
     }
 
     return { objects: objects.get() }
@@ -270,19 +289,19 @@ export default class AccessObjectsController {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
-    if (params.id === undefined) {
+    const filename = sanitizeFilename(params.id)
+    if (filename === undefined) {
       return response.badRequest({
         key: 'file',
         error: ObjectResponseTypeError.NoFileID,
       })
     }
-    const id = params.id
 
-    const prefix = calculatePrefix(userId, id)
+    const prefix = calculatePrefix(userId, filename)
     const query = await Object.query().where('owner_id', userId).where('key', prefix).first()
     if (!query || !(await getDisk().exists(prefix))) {
       return response.notFound({
-        key: id,
+        key: filename,
         error: ObjectResponseTypeError.NotFound,
       })
     }
@@ -295,7 +314,7 @@ export default class AccessObjectsController {
     await Object.query().where('owner_id', userId).where('key', prefix).delete()
 
     return response.noContent({
-      key: id,
+      key: filename,
       message: ObjectResponseTypeSuccess.DeleteSuccess,
     })
   }
@@ -316,10 +335,17 @@ export default class AccessObjectsController {
     const objects = new ObjectResponseType()
 
     for (const id of ids) {
-      const prefix = calculatePrefix(userId, id)
+      const filename = sanitizeFilename(id)
+      
+      if (filename === undefined) {
+        objects.addError({ key: id, error: ObjectResponseTypeError.InvalidFilename })
+        continue
+      }
+
+      const prefix = calculatePrefix(userId, filename)
       const query = await Object.query().where('owner_id', userId).where('key', prefix).first()
       if (!query || !(await getDisk().exists(prefix))) {
-        objects.addError({ key: id, error: ObjectResponseTypeError.NotFound })
+        objects.addError({ key: filename, error: ObjectResponseTypeError.NotFound })
         continue
       }
 
@@ -334,7 +360,7 @@ export default class AccessObjectsController {
 
       await getDisk().delete(prefix)
       await Object.query().where('owner_id', userId).where('key', prefix).delete()
-      objects.addSuccess({ key: id, message: ObjectResponseTypeSuccess.DeleteSuccess })
+      objects.addSuccess({ key: filename, message: ObjectResponseTypeSuccess.DeleteSuccess })
     }
 
     return { objects: objects.get() }
@@ -347,12 +373,12 @@ export default class AccessObjectsController {
     if (params.id === undefined) {
       return response.badRequest({ key: 'file?', error: ObjectResponseTypeError.NoFileID })
     }
-    const id = params.id
+    const filename = sanitizeFilename(params.id)
     const visibilityState = request.input('visibility', StorageObjectVisibility.private)
     if (!visibilityState || !(visibilityState in StorageObjectVisibility)) {
-      return response.badRequest({ key: id, error: ObjectResponseTypeError.InvalidVisibilityState })
+      return response.badRequest({ key: filename, error: ObjectResponseTypeError.InvalidVisibilityState })
     }
-    const prefix = calculatePrefix(userId, id)
+    const prefix = calculatePrefix(userId, filename)
     try {
       const result = await Object.query().where('owner_id', userId).where('key', prefix).update({
         visibility: visibilityState,
@@ -360,14 +386,14 @@ export default class AccessObjectsController {
       })
       if (result.length > 0 && result[0] > 0) {
         return {
-          key: id,
+          key: filename,
           message: ObjectResponseTypeSuccess.UpdateVisibilitySuccess,
         }
       }
     } catch (error) {
-      return response.badRequest({ key: id, error: ObjectResponseTypeError.IndexError })
+      return response.badRequest({ key: filename, error: ObjectResponseTypeError.IndexError })
     }
-    return response.badRequest({ key: id, error: ObjectResponseTypeError.IndexError })
+    return response.badRequest({ key: filename, error: ObjectResponseTypeError.IndexError })
   }
 
   // Special routes for Accessing objects from other users
@@ -381,7 +407,13 @@ export default class AccessObjectsController {
         error: ObjectResponseTypeError.InvalidUserID,
       })
     }
-    const targetUser = params.userid
+    const targetUser = sanitizeUserId(params.userid)
+    if (targetUser === undefined) {
+      return response.badRequest({
+        key: 'userid',
+        error: ObjectResponseTypeError.InvalidUserID,
+      })
+    }
     const page = request.input('page', 1)
     let limit = request.input('limit', 10)
     if (limit < 0) limit = 1
@@ -414,28 +446,42 @@ export default class AccessObjectsController {
         error: ObjectResponseTypeError.InvalidUserID,
       })
     }
-    const prefix = calculatePrefix(params.userid, params.id)
+    const targetUser = sanitizeUserId(params.userid)
+    if (targetUser === undefined) {
+      return response.badRequest({
+        key: 'userid',
+        error: ObjectResponseTypeError.InvalidUserID,
+      })
+    }
+    const filename = sanitizeFilename(params.id)
+    if (filename === undefined) {
+      return response.badRequest({
+        key: filename,
+        error: ObjectResponseTypeError.InvalidFilename,
+      })
+    }
+    const prefix = calculatePrefix(targetUser, filename)
     try {
       if (
         (await Object.query()
-          .where('owner_id', params.userid)
+          .where('owner_id', targetUser)
           .where('key', prefix)
           .where('visibility', 'public')
           .first()) ||
         (await getDisk().exists(prefix))
       ) {
         const stream = await getDisk().getStream(prefix)
-        response.header('Content-Disposition', `attachment; filename="${params.id}"`)
+        response.header('Content-Disposition', `attachment; filename="${filename}"`)
         response.header('Content-Type', 'application/octet-stream')
         return response.stream(stream)
       }
       return response.notFound({
-        key: params.id,
+        key: filename,
         error: ObjectResponseTypeError.NotFound,
       })
     } catch (error) {
       return response.badRequest({
-        key: params.id,
+        key: filename,
         error: ObjectResponseTypeError.IndexError,
       })
     }
