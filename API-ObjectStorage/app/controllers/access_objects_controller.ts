@@ -89,7 +89,8 @@ export default class AccessObjectsController {
       try {
         await QuotaTryToUpload(userId, BigInt(file.size))
       } catch (error) {
-        objects.addError({ key: s3Path, error: (error as Error).message })
+        objects.addError({ key: fileName, error: QuotaError.NoUploadRemaining })
+        console.log(`QuotaTryToUpload from ${userId} error:`, (error as Error).message)
         continue
       }
 
@@ -141,7 +142,8 @@ export default class AccessObjectsController {
     try {
       await QuotaTryToDownload(userId)
     } catch (error) {
-      return response.badRequest((error as Error).message)
+      console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
+      return response.badRequest(QuotaError.NoDownloadRemaining)
     }
     const filename = sanitizeFilename(params.id)
     const prefix = calculatePrefix(userId, filename) // List only files for the authenticated user
@@ -308,7 +310,8 @@ export default class AccessObjectsController {
     try {
       await QuotaTryToDelete(userId, BigInt(query.sizeBytes))
     } catch (error) {
-      return response.badRequest((error as Error).message)
+      console.log(`QuotaTryToDelete from ${userId} error:`, (error as Error).message)
+      return response.badRequest(QuotaError.QuotaDeleteFailed)
     }
     await getDisk().delete(prefix)
     await Object.query().where('owner_id', userId).where('key', prefix).delete()
@@ -352,9 +355,10 @@ export default class AccessObjectsController {
       try {
         await QuotaTryToDelete(userId, BigInt(query.sizeBytes))
       } catch (error) {
+        console.log(`QuotaTryToDelete from ${userId} error:`, (error as Error).message)
         return response.badRequest({
           key: 'ids',
-          error: (error as Error).message,
+          error: QuotaError.QuotaDeleteFailed,
         })
       }
 
@@ -438,7 +442,8 @@ export default class AccessObjectsController {
     try {
       await QuotaTryToDownload(userId)
     } catch (error) {
-      return response.badRequest((error as Error).message)
+      console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
+      return response.badRequest(QuotaError.NoDownloadRemaining)
     }
     if (!params.userid || !params.id) {
       return response.badRequest({
