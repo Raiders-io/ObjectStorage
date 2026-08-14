@@ -40,7 +40,7 @@ export default class AccessObjectsController {
     try {
       const result = await Object.query()
         .where('owner_id', userId)
-        .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
+        .select('name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
       if (!result) throw new Error('Index Query')
@@ -426,7 +426,7 @@ export default class AccessObjectsController {
       const result = await Object.query()
         .where('owner_id', targetUser)
         .where('visibility', 'public')
-        .select('key', 'name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
+        .select('name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
       return { message: ObjectResponseTypeSuccess.IndexSuccess, objects: result }
