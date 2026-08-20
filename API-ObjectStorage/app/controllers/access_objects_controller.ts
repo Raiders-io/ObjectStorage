@@ -132,6 +132,9 @@ export default class AccessObjectsController {
     if (objects.length === 0) {
       return response.internalServerError(ObjectResponseTypeError.UploadError)
     }
+    if (objects.length === 1 && objects.get()[0].key && 'error' in objects.get()[0]) {
+      return response.badRequest((objects.get()[0] as ObjectError).error)
+    }
     return { objects: objects.get() }
   }
 
