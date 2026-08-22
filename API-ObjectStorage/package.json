@@ -75,6 +75,7 @@
     "@vinejs/vine": "^4.3.1",
     "better-sqlite3": "^12.9.0",
     "luxon": "~3.4.4",
+    "mime-types": "^3.0.2",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2"
   },

@@ -51,6 +51,7 @@ router
             router.put('/', [controllers.AccessObjects, 'updateMany']).as('bulkUpdateObjects')
             router.delete('/', [controllers.AccessObjects, 'destroyMany']).as('bulkDeleteObjects')
             router.get('/:id', [controllers.AccessObjects, 'show']).as('getObject')
+            router.get('/preview/:id', [controllers.AccessObjects, 'preview']).as('previewObject')
             router.put('/:id', [controllers.AccessObjects, 'update']).as('updateObject')
             router.delete('/:id', [controllers.AccessObjects, 'destroy']).as('deleteObject')
             router.patch('/:id', [controllers.AccessObjects, 'updateInfo']).as('updateObjectInfo')

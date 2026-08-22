@@ -1,6 +1,11 @@
 import Object from '#models/object'
 import Quota from '#models/quota'
+import { QuotaTryToDownload } from '#services/quota'
+import { QuotaError } from '#class/quota'
 import { calculatePrefix, getDisk } from '#services/disk'
+import { sanitizeFilename } from '#services/sanitize-utils'
+import { StorageObjectUploadStatus } from '#enums/storage_objects'
+import { HttpContext } from '@adonisjs/core/http'
 
 export async function indexAll(
   userId: string
@@ -62,4 +67,31 @@ export async function deleteAllObjectsForUser(
     quota: 'Deleted',
   }
   return res
+}
+
+export const downloadLogic = async (userId: string, objectId: string, wantInline: boolean, response: HttpContext['response']) => {
+  if (!userId || userId === '') throw new Error('User ID not found in context')  
+  try {
+    await QuotaTryToDownload(userId)
+  } catch (error) {
+    console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
+    throw new Error(QuotaError.NoDownloadRemaining)
+  }
+  const filename = sanitizeFilename(objectId)
+  const prefix = calculatePrefix(userId, filename) // List only files for the authenticated user
+  const object = await Object.query().where('owner_id', userId).where('key', prefix).first()
+  if (
+    ( object && object.status === StorageObjectUploadStatus.complete ) ||
+    (await getDisk().exists(prefix))
+  ) {
+    const stream = await getDisk().getStream(prefix)
+    if (wantInline) {
+      response.header('Content-Disposition', 'inline')
+      response.header('Content-Type', object?.mimeType || 'application/pdf')
+    } else {
+      response.header('Content-Disposition', `attachment; filename="${filename}"`)
+      response.header('Content-Type', 'application/octet-stream')
+    }
+    return response.stream(stream)
+  }
 }

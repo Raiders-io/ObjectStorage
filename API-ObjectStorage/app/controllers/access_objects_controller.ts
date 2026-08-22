@@ -21,6 +21,8 @@ import { getDisk, diskName, calculatePrefix } from '#services/disk'
 
 import { QuotaError } from '#class/quota'
 import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
+import { mime } from '@adonisjs/core/http/helpers'
+import { downloadLogic } from '#services/access_object_service'
 
 export default class AccessObjectsController {
   async index({
@@ -101,7 +103,7 @@ export default class AccessObjectsController {
             key: s3Path,
             name: fileName,
             sizeBytes: file.size,
-            mimeType: file.type,
+            mimeType: mime.lookup(fileName) || file.type || 'application/octet-stream',
             visibility: StorageObjectVisibility.private,
             status: StorageObjectUploadStatus.uploading,
           },
@@ -139,30 +141,21 @@ export default class AccessObjectsController {
   }
 
   async show({ params, request, response }: HttpContext) {
-    const userId = request.ctx?.userId || ''
-    if (!userId || userId === '') throw new Error('User ID not found in context')
-
     try {
-      await QuotaTryToDownload(userId)
-    } catch (error) {
-      console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
-      return response.badRequest(QuotaError.NoDownloadRemaining)
+      return await downloadLogic(request.ctx?.userId || '', params.id, false, response)
     }
-    const filename = sanitizeFilename(params.id)
-    const prefix = calculatePrefix(userId, filename) // List only files for the authenticated user
-    if (
-      (await Object.query().where('owner_id', userId).where('key', prefix).first()) ||
-      (await getDisk().exists(prefix))
-    ) {
-      const stream = await getDisk().getStream(prefix)
-      response.header('Content-Disposition', `attachment; filename="${filename}"`)
-      response.header('Content-Type', 'application/octet-stream')
-      return response.stream(stream)
+    catch (error) {
+      return response.badRequest(error)
     }
-    return response.notFound({
-      key: filename,
-      error: ObjectResponseTypeError.NotFound,
-    })
+  }
+
+  async preview({ params, request, response }: HttpContext) {
+    try {
+      return await downloadLogic(request.ctx?.userId || '', params.id, true, response)
+    }
+    catch (error) {
+      return response.badRequest(error)
+    }
   }
 
   async update({ params, request, response }: HttpContext) {
