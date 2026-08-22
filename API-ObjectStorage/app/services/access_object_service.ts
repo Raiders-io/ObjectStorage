@@ -69,8 +69,13 @@ export async function deleteAllObjectsForUser(
   return res
 }
 
-export const downloadLogic = async (userId: string, objectId: string, wantInline: boolean, response: HttpContext['response']) => {
-  if (!userId || userId === '') throw new Error('User ID not found in context')  
+export const downloadLogic = async (
+  userId: string,
+  objectId: string,
+  wantInline: boolean,
+  response: HttpContext['response']
+) => {
+  if (!userId || userId === '') throw new Error('User ID not found in context')
   try {
     await QuotaTryToDownload(userId)
   } catch (error) {
@@ -81,7 +86,7 @@ export const downloadLogic = async (userId: string, objectId: string, wantInline
   const prefix = calculatePrefix(userId, filename) // List only files for the authenticated user
   const object = await Object.query().where('owner_id', userId).where('key', prefix).first()
   if (
-    ( object && object.status === StorageObjectUploadStatus.complete ) ||
+    (object && object.status === StorageObjectUploadStatus.complete) ||
     (await getDisk().exists(prefix))
   ) {
     const stream = await getDisk().getStream(prefix)

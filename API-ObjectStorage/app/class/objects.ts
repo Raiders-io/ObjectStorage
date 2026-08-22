@@ -30,7 +30,7 @@ export enum ObjectResponseTypeError {
   UpdateError = 'Failed to update file',
   DeleteError = 'Failed to delete file',
   InvalidVisibilityState = 'Invalid visibility state, must be one of: private, public, shared',
-  InvalidFilename = 'Invalid filename'
+  InvalidFilename = 'Invalid filename',
 }
 
 // Routes messages Success

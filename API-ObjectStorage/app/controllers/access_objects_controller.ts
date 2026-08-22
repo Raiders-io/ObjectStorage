@@ -143,8 +143,7 @@ export default class AccessObjectsController {
   async show({ params, request, response }: HttpContext) {
     try {
       return await downloadLogic(request.ctx?.userId || '', params.id, false, response)
-    }
-    catch (error) {
+    } catch (error) {
       return response.badRequest(error)
     }
   }
@@ -152,8 +151,7 @@ export default class AccessObjectsController {
   async preview({ params, request, response }: HttpContext) {
     try {
       return await downloadLogic(request.ctx?.userId || '', params.id, true, response)
-    }
-    catch (error) {
+    } catch (error) {
       return response.badRequest(error)
     }
   }
@@ -335,7 +333,7 @@ export default class AccessObjectsController {
 
     for (const id of ids) {
       const filename = sanitizeFilename(id)
-      
+
       if (filename === undefined) {
         objects.addError({ key: id, error: ObjectResponseTypeError.InvalidFilename })
         continue
@@ -376,7 +374,10 @@ export default class AccessObjectsController {
     const filename = sanitizeFilename(params.id)
     const visibilityState = request.input('visibility', StorageObjectVisibility.private)
     if (!visibilityState || !(visibilityState in StorageObjectVisibility)) {
-      return response.badRequest({ key: filename, error: ObjectResponseTypeError.InvalidVisibilityState })
+      return response.badRequest({
+        key: filename,
+        error: ObjectResponseTypeError.InvalidVisibilityState,
+      })
     }
     const prefix = calculatePrefix(userId, filename)
     try {
