@@ -10,7 +10,7 @@ Design choices :
 ## Simple
 
 Validation made by the API (write heavy as API handles routing and read/write of files).
-Slower but simpler to make
+Slower but simpler to make.
 
 ```mermaid
 sequenceDiagram
@@ -22,10 +22,10 @@ sequenceDiagram
     activate API_object
     API_object->>API_object: Verify Rate Limit
     API_object->>API_object: Verify Quotas
+    API_object->>API_object: Validate file
     API_object->>DB: Create a new entry
     activate DB
     deactivate DB
-    API_object->>API_object: Validate entry
     API_object->>S3: Move file to S3
     activate S3
     deactivate S3
@@ -36,7 +36,8 @@ sequenceDiagram
 ## Complete
 
 Validation made by a worker, faster as multiple workers can be invoked.
-Better scalability
+Better scalability, but increased resource consumption (RAM and CPU) under low load. It would perform     API_object->>User: Give presigned URL
+significantly better under a huge load than the simple design.
 
 Notes :
 > Worker should be automatically triggered if `POST /uploads/{id}/complete` is never called after a timeout
