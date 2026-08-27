@@ -1,0 +1,23 @@
+meta {
+  name: bulkDeleteObjects
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/objects/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "ids": ["[file_name]", "[file_name2]"]
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

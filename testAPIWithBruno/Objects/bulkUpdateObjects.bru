@@ -1,0 +1,21 @@
+meta {
+  name: bulkUpdateObjects
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/objects/
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  files[]: 
+  files[]: 
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

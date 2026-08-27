@@ -1,0 +1,16 @@
+meta {
+  name: deleteALL
+  type: http
+  seq: 12
+}
+
+delete {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/all
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

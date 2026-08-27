@@ -1,0 +1,27 @@
+{
+  "version": "1",
+  "name": "BrunObjectStorage",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "size": 0.00424957275390625,
+  "filesCount": 21,
+  "presets": {
+    "requestType": "http",
+    "requestUrl": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/"
+  },
+  "clientCertificates": {
+    "enabled": true,
+    "certs": [
+      {
+        "domain": "localhost:4443",
+        "type": "cert",
+        "certFilePath": "{{SSL_CERTS_LOCATION}}",
+        "keyFilePath": "{{SSL_KEY_LOCATION}}",
+        "passphrase": ""
+      }
+    ]
+  }
+}

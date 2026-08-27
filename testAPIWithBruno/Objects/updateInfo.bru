@@ -1,0 +1,24 @@
+meta {
+  name: updateInfo
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/objects/:id?visibility=
+  body: none
+  auth: inherit
+}
+
+params:query {
+  visibility: 
+}
+
+params:path {
+  id: b1.md
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

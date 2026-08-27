@@ -1,0 +1,25 @@
+meta {
+  name: updateObject
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/objects/:id
+  body: multipartForm
+  auth: inherit
+}
+
+params:path {
+  id: [file_name]
+}
+
+body:multipart-form {
+  file: [file_name]
+  ~files[]: 
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,21 @@
+meta {
+  name: getObjectFrom
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/users/:userid/objects/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  userid: [user_id]
+  id: [file_name]
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

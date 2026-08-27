@@ -1,0 +1,16 @@
+meta {
+  name: indexALL
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/all
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

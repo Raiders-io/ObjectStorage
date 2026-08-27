@@ -1,0 +1,20 @@
+meta {
+  name: deleteObject
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/objects/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: [file_name]
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
