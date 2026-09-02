@@ -9,6 +9,7 @@ all:
 
 $(NAME):
 	docker network create --internal api-network || true
+	docker network create --internal monitoring-network || true
 	docker compose up -d --build --force-recreate --remove-orphans
 
 env:

@@ -52,6 +52,7 @@ services:
       - ./Garage/garage.toml:/etc/garage.toml
     networks:
       - basic-network
+      - monitoring-network
     # ports:
       # - "3900:3900"   # S3 API
       # - "3901:3901"   # RPC inter-nodes (here single-node, so not needed)
@@ -91,6 +92,8 @@ networks:
     driver: bridge
     internal: true
   api-network:
+    external: true
+  monitoring-network:
     external: true
 
 volumes:
