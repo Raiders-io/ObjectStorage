@@ -9,7 +9,7 @@ Events created :
 - `object.file.created`
 - `object.file.updated`
 - `object.file.deleted`
-- `object.file.visibility`
+- `object.file.visibility.updated`
 - `object.user.data`
 
 ## `object.file.created`
@@ -51,7 +51,7 @@ payload :
 }
 ```
 
-## `object.file.visibility`
+## `object.file.visibility.updated`
 
 Published when the visibility of a file is edited by a user.
 
@@ -60,6 +60,7 @@ payload :
 ```json
 {
   file: file-id,
+  userId: user-id,
   visibility: new-visiblity,
 }
 ```

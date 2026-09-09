@@ -8,8 +8,7 @@ export default class MessageBrokerProvider {
   /**
    * Register bindings to the container
    */
-  register() {
-  }
+  register() {}
 
   /**
    * The container bindings have booted
@@ -22,8 +21,8 @@ export default class MessageBrokerProvider {
   async start() {
     Broker.init({
       redisUrl: process.env.REDIS_URL || 'redis://redis:6379',
-      group: "object-service",
-      consumer: "object-service",
+      group: 'object-service',
+      consumer: 'object-service',
     })
 
     publish('object.events', {
@@ -37,9 +36,7 @@ export default class MessageBrokerProvider {
    * The process has been started
    */
   async ready() {
-    await consume('auth.events')
-      .on('auth.user.deleted', handleAsyncMessage)
-      .start()
+    await consume('auth.events').on('auth.user.deleted', handleAsyncMessage).start()
   }
 
   /**
