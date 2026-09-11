@@ -211,7 +211,7 @@ export default class AccessObjectsController {
     await db.transaction(async () => {
       await Object.query().where('owner_id', userId).where('key', prefix).update({
         sizeBytes: file.size,
-        mimeType: file.type,
+        mimeType:  mime.lookup(filename) || file.type || 'application/octet-stream',
         updatedAt: new Date(),
       })
     })
@@ -269,7 +269,7 @@ export default class AccessObjectsController {
       await db.transaction(async () => {
         await Object.query().where('owner_id', userId).where('key', prefix).update({
           sizeBytes: file.size,
-          mimeType: file.type,
+          mimeType:  mime.lookup(filename) || file.type || 'application/octet-stream',
           updatedAt: new Date(),
         })
       })
