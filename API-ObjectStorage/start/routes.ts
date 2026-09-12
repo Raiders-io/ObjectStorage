@@ -79,6 +79,7 @@ router
             router
               .get('/:userid/objects/:id', [controllers.AccessObjects, 'showFrom'])
               .as('getObjectFrom')
+            router.get('/:userid/objects/preview/:id', [controllers.AccessObjects, 'previewFrom']).as('previewObjectFrom')
           })
           .prefix('/users')
           .as('users')

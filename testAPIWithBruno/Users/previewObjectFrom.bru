@@ -1,11 +1,11 @@
 meta {
-  name: getObjectFrom
+  name: previewObjectFrom
   type: http
-  seq: 1
+  seq: 2
 }
 
 get {
-  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/users/:userid/objects/:id
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/users/:userid/objects/preview/:id
   body: none
   auth: inherit
 }

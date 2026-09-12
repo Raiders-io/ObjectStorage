@@ -6,7 +6,6 @@ import db from '@adonisjs/lucid/services/db'
 import {
   QuotaVerifyForUpdate,
   QuotaTryToUpload,
-  QuotaTryToDownload,
   QuotaTryToUpdate,
   QuotaTryToDelete,
 } from '#services/quota'
@@ -141,16 +140,18 @@ export default class AccessObjectsController {
   }
 
   async show({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
     try {
-      return await downloadLogic(request.ctx?.userId || '', params.id, false, response)
+      return await downloadLogic(userId, userId, params.id, false, response)
     } catch (error) {
       return response.badRequest(error)
     }
   }
 
   async preview({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
     try {
-      return await downloadLogic(request.ctx?.userId || '', params.id, true, response)
+      return await downloadLogic(userId, userId, params.id, true, response)
     } catch (error) {
       return response.badRequest(error)
     }
@@ -436,12 +437,6 @@ export default class AccessObjectsController {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
-    try {
-      await QuotaTryToDownload(userId)
-    } catch (error) {
-      console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
-      return response.badRequest(QuotaError.NoDownloadRemaining)
-    }
     if (!params.userid || !params.id) {
       return response.badRequest({
         key: 'userid',
@@ -455,37 +450,28 @@ export default class AccessObjectsController {
         error: ObjectResponseTypeError.InvalidUserID,
       })
     }
-    const filename = sanitizeFilename(params.id)
-    if (filename === undefined) {
+    try {
+      return await downloadLogic(request.ctx?.userId || '', targetUser, params.id, false, response)
+    } catch (error) {
+      return response.badRequest(error)
+    }
+  }
+  async previewFrom({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
+
+    let targetUser: string | undefined = undefined
+    if (params.userid) targetUser = sanitizeUserId(params.userid)
+    if (!params.userid || !params.id || targetUser === undefined) {
       return response.badRequest({
-        key: filename,
-        error: ObjectResponseTypeError.InvalidFilename,
+        key: 'userid',
+        error: ObjectResponseTypeError.InvalidUserID,
       })
     }
-    const prefix = calculatePrefix(targetUser, filename)
     try {
-      if (
-        (await Object.query()
-          .where('owner_id', targetUser)
-          .where('key', prefix)
-          .where('visibility', 'public')
-          .first()) ||
-        (await getDisk().exists(prefix))
-      ) {
-        const stream = await getDisk().getStream(prefix)
-        response.header('Content-Disposition', `attachment; filename="${filename}"`)
-        response.header('Content-Type', 'application/octet-stream')
-        return response.stream(stream)
-      }
-      return response.notFound({
-        key: filename,
-        error: ObjectResponseTypeError.NotFound,
-      })
+      return await downloadLogic(request.ctx?.userId || '', targetUser, params.id, true, response)
     } catch (error) {
-      return response.badRequest({
-        key: filename,
-        error: ObjectResponseTypeError.IndexError,
-      })
+      return response.badRequest(error)
     }
   }
 }

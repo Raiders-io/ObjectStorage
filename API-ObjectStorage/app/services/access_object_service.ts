@@ -71,6 +71,7 @@ export async function deleteAllObjectsForUser(
 
 export const downloadLogic = async (
   userId: string,
+  targetUserId: string,
   objectId: string,
   wantInline: boolean,
   response: HttpContext['response']
@@ -82,9 +83,14 @@ export const downloadLogic = async (
     console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
     throw new Error(QuotaError.NoDownloadRemaining)
   }
+  if (!targetUserId || targetUserId === '') throw new Error('Target User ID not found in context')
   const filename = sanitizeFilename(objectId)
-  const prefix = calculatePrefix(userId, filename) // List only files for the authenticated user
-  const object = await Object.query().where('owner_id', userId).where('key', prefix).first()
+  const prefix = calculatePrefix(targetUserId, filename) // List only files for the authenticated user
+  let object: Object | null = null
+  if (targetUserId !== userId)
+    object = await Object.query().where('owner_id', userId).where('key', prefix).where('visibility', 'public').first()
+  else  
+    object = await Object.query().where('owner_id', userId).where('key', prefix).first()
   if (
     (object && object.status === StorageObjectUploadStatus.complete) ||
     (await getDisk().exists(prefix))
