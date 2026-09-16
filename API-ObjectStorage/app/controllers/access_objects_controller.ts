@@ -132,7 +132,7 @@ export default class AccessObjectsController {
       objects.addSuccess({ key: s3Path, message: ObjectResponseTypeSuccess.UploadSuccess })
       publish('object.events', {
         type: 'object.file.created',
-        payload: { userId: userId, file: fileName },
+        payload: { userId: userId, filename: fileName },
       })
     }
     if (objects.length === 0) {
@@ -229,7 +229,7 @@ export default class AccessObjectsController {
 
     publish('object.events', {
       type: 'object.file.updated',
-      payload: { userId: userId, file: file.clientName },
+      payload: { userId: userId, filename: file.clientName },
     })
     return {
       key: filename,
@@ -291,7 +291,7 @@ export default class AccessObjectsController {
       })
       publish('object.events', {
         type: 'object.file.updated',
-        payload: { userId: userId, file: file.clientName },
+        payload: { userId: userId, filename: file.clientName },
       })
 
       await file.moveToDisk(prefix, diskName)
@@ -331,7 +331,7 @@ export default class AccessObjectsController {
     await Object.query().where('owner_id', userId).where('key', prefix).delete()
     publish('object.events', {
       type: 'object.file.deleted',
-      payload: { userId: userId, file: filename },
+      payload: { userId: userId, filename: filename },
     })
     return response.noContent({
       key: filename,
@@ -384,7 +384,7 @@ export default class AccessObjectsController {
       objects.addSuccess({ key: filename, message: ObjectResponseTypeSuccess.DeleteSuccess })
       publish('object.events', {
         type: 'object.file.deleted',
-        payload: { userId: userId, file: filename },
+        payload: { userId: userId, filename: filename },
       })
     }
 
@@ -414,7 +414,7 @@ export default class AccessObjectsController {
       })
       publish('object.events', {
         type: 'object.file.visibility.updated',
-        payload: { userId: userId, file: filename, visibility: visibilityState },
+        payload: { userId: userId, filename: filename, visibility: visibilityState },
       })
       if (result.length > 0 && result[0] > 0) {
         return {

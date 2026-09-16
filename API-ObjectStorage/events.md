@@ -20,7 +20,7 @@ payload :
 
 ```json
 {
-  file: file-id,
+  filename: filename,
   userId: user-id,
 }
 ```
@@ -33,7 +33,7 @@ payload :
 
 ```json
 {
-  file: file-id,
+  filename: filename,
   userId: user-id,
 }
 ```
@@ -46,7 +46,7 @@ payload :
 
 ```json
 {
-  file: file-id,
+  filename: filename,
   userId: user-id,
 }
 ```
@@ -59,7 +59,7 @@ payload :
 
 ```json
 {
-  file: file-id,
+  filename: filename,
   userId: user-id,
   visibility: new-visiblity,
 }
