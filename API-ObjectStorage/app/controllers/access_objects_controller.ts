@@ -21,7 +21,7 @@ import { getDisk, diskName, calculatePrefix } from '#services/disk'
 import { QuotaError } from '#class/quota'
 import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
 import { mime } from '@adonisjs/core/http/helpers'
-import { downloadLogic, searchLogic } from '#services/access_object_service'
+import { downloadLogic, searchLogic, changeVisibility } from '#services/access_object_service'
 import { publish } from '@yosone/broker'
 
 export default class AccessObjectsController {
@@ -398,33 +398,15 @@ export default class AccessObjectsController {
     if (params.id === undefined) {
       return response.badRequest({ key: 'file?', error: ObjectResponseTypeError.NoFileID })
     }
-    const filename = sanitizeFilename(params.id)
     const visibilityState = request.input('visibility', StorageObjectVisibility.private)
-    if (!visibilityState || !(visibilityState in StorageObjectVisibility)) {
-      return response.badRequest({
-        key: filename,
-        error: ObjectResponseTypeError.InvalidVisibilityState,
-      })
-    }
-    const prefix = calculatePrefix(userId, filename)
     try {
-      const result = await Object.query().where('owner_id', userId).where('key', prefix).update({
-        visibility: visibilityState,
-        updatedAt: new Date(),
-      })
-      publish('object.events', {
-        type: 'object.file.visibility.updated',
-        payload: { userId: userId, filename: filename, visibility: visibilityState },
-      })
-      if (result.length > 0 && result[0] > 0) {
-        return {
-          key: filename,
-          message: ObjectResponseTypeSuccess.UpdateVisibilitySuccess,
-        }
-      }
+      return await changeVisibility(userId, params.id, visibilityState)
     } catch (e) {
+      if (e instanceof Error && e.message in ObjectResponseTypeError) {
+        return response.badRequest({ key: params.id, error: e })
+      }
     } finally {
-      return response.badRequest({ key: filename, error: ObjectResponseTypeError.IndexError })
+      return response.badRequest({ key: params.id, error: ObjectResponseTypeError.IndexError })
     }
   }
 

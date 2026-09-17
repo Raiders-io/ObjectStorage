@@ -6,7 +6,8 @@ import { calculatePrefix, getDisk } from '#services/disk'
 import { sanitizeFilename } from '#services/sanitize-utils'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import { HttpContext } from '@adonisjs/core/http'
-import { ObjectResponseTypeError } from '#class/objects'
+import { ObjectResponseTypeError, ObjectResponseTypeSuccess, ObjectSuccess } from '#class/objects'
+import { publish } from '@yosone/broker'
 
 export async function indexAll(
   userId: string
@@ -154,6 +155,43 @@ export const searchLogic = async (
       notfound: sanitizedFiles.filter((k) => !foundKeys.has(k)).map((k) => keyToFilename.get(k)!),
     }
   } catch (error) {
+    throw new Error(ObjectResponseTypeError.IndexError)
+  }
+}
+
+export async function changeVisibility(
+  userId: string,
+  rawFilename: string,
+  visibilityState: StorageObjectVisibility
+): Promise<ObjectSuccess> {
+  const filename = sanitizeFilename(rawFilename)
+  if (filename === undefined) {
+    throw new Error(ObjectResponseTypeError.InvalidFilename)
+  }
+  if (!visibilityState || !(visibilityState in StorageObjectVisibility)) {
+    throw new Error(ObjectResponseTypeError.InvalidVisibilityState)
+  }
+  const prefix = calculatePrefix(userId, filename)
+  try {
+    const result = await Object.query()
+      .where('owner_id', userId)
+      .where('key', prefix)
+      .update({ visibility: visibilityState })
+    publish('object.events', {
+      type: 'object.file.visibility.updated',
+      payload: { userId: userId, filename: filename, visibility: visibilityState },
+    })
+    if (result.length > 0 && result[0] > 0) {
+      return {
+        key: filename,
+        message: ObjectResponseTypeSuccess.UpdateVisibilitySuccess,
+      }
+    }
+    throw new Error(ObjectResponseTypeError.IndexError)
+  } catch (e) {
+    if (e instanceof Error && e.message in ObjectResponseTypeError) {
+      throw new Error(e.message)
+    }
     throw new Error(ObjectResponseTypeError.IndexError)
   }
 }
