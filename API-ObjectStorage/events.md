@@ -1,16 +1,39 @@
 # Events for the message broker service
 
-Events followed :
+## Important informations
+
+- group: `object-service`
+- consumer: `object-service`
+- stream : `object.events`
+- events types naming convention : `object.<type>`
+
+## Events followed
 
 - `auth.user.deleted`
+- `lesson.file.attached`
 
-Events created :
+## Events created
 
+- `object.started`
 - `object.file.created`
 - `object.file.updated`
 - `object.file.deleted`
 - `object.file.visibility.updated`
 - `object.user.data`
+
+For more informations, you can look directly for the Zod Schema implementation in `app/class/events.ts`.
+
+## `object.started`
+
+Published when the service started.
+
+payload :
+
+```json
+{
+  message: string,
+}
+```
 
 ## `object.file.created`
 
@@ -20,8 +43,8 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
+  filename: string,
+  userId: uuid,
 }
 ```
 
@@ -33,8 +56,8 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
+  filename: string,
+  userId: uuid,
 }
 ```
 
@@ -46,8 +69,8 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
+  filename: string,
+  userId: uuid,
 }
 ```
 
@@ -59,9 +82,9 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
-  visibility: new-visiblity,
+  filename: string,
+  userId: uuid,
+  visibility: 'public' | 'private' | 'shared',
 }
 ```
 
@@ -74,6 +97,6 @@ payload :
 ```json
 {
   userId: user-id,
-  state: requested | deleted,
+  state: 'requested' | 'deleted',
 }
 ```

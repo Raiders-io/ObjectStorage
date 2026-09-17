@@ -21,8 +21,13 @@ import { getDisk, diskName, calculatePrefix } from '#services/disk'
 import { QuotaError } from '#class/quota'
 import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
 import { mime } from '@adonisjs/core/http/helpers'
-import { downloadLogic, searchLogic } from '#services/access_object_service'
+import { downloadLogic, searchLogic, changeVisibility } from '#services/access_object_service'
 import { publish } from '@yosone/broker'
+import {
+  ObjectFileCreatedEvent,
+  ObjectFileDeletedEvent,
+  ObjectFileUpdatedEvent,
+} from '#validators/event'
 
 export default class AccessObjectsController {
   async index({
@@ -130,10 +135,11 @@ export default class AccessObjectsController {
         continue
       }
       objects.addSuccess({ key: s3Path, message: ObjectResponseTypeSuccess.UploadSuccess })
-      publish('object.events', {
+      const event: ObjectFileCreatedEvent = {
         type: 'object.file.created',
         payload: { userId: userId, filename: fileName },
-      })
+      }
+      publish('object.events', event)
     }
     if (objects.length === 0) {
       return response.internalServerError(ObjectResponseTypeError.UploadError)
@@ -227,10 +233,11 @@ export default class AccessObjectsController {
 
     await file.moveToDisk(prefix, diskName)
 
-    publish('object.events', {
+    const event: ObjectFileUpdatedEvent = {
       type: 'object.file.updated',
       payload: { userId: userId, filename: file.clientName },
-    })
+    }
+    publish('object.events', event)
     return {
       key: filename,
       message: ObjectResponseTypeSuccess.UpdateSuccess,
@@ -289,10 +296,11 @@ export default class AccessObjectsController {
             updatedAt: new Date(),
           })
       })
-      publish('object.events', {
+      const event: ObjectFileUpdatedEvent = {
         type: 'object.file.updated',
         payload: { userId: userId, filename: file.clientName },
-      })
+      }
+      publish('object.events', event)
 
       await file.moveToDisk(prefix, diskName)
       objects.addSuccess({ key: filename, message: ObjectResponseTypeSuccess.UpdateSuccess })
@@ -329,10 +337,11 @@ export default class AccessObjectsController {
     }
     await getDisk().delete(prefix)
     await Object.query().where('owner_id', userId).where('key', prefix).delete()
-    publish('object.events', {
+    const event: ObjectFileDeletedEvent = {
       type: 'object.file.deleted',
       payload: { userId: userId, filename: filename },
-    })
+    }
+    publish('object.events', event)
     return response.noContent({
       key: filename,
       message: ObjectResponseTypeSuccess.DeleteSuccess,
@@ -382,10 +391,11 @@ export default class AccessObjectsController {
       await getDisk().delete(prefix)
       await Object.query().where('owner_id', userId).where('key', prefix).delete()
       objects.addSuccess({ key: filename, message: ObjectResponseTypeSuccess.DeleteSuccess })
-      publish('object.events', {
+      const event: ObjectFileDeletedEvent = {
         type: 'object.file.deleted',
         payload: { userId: userId, filename: filename },
-      })
+      }
+      publish('object.events', event)
     }
 
     return { objects: objects.get() }
@@ -398,33 +408,15 @@ export default class AccessObjectsController {
     if (params.id === undefined) {
       return response.badRequest({ key: 'file?', error: ObjectResponseTypeError.NoFileID })
     }
-    const filename = sanitizeFilename(params.id)
     const visibilityState = request.input('visibility', StorageObjectVisibility.private)
-    if (!visibilityState || !(visibilityState in StorageObjectVisibility)) {
-      return response.badRequest({
-        key: filename,
-        error: ObjectResponseTypeError.InvalidVisibilityState,
-      })
-    }
-    const prefix = calculatePrefix(userId, filename)
     try {
-      const result = await Object.query().where('owner_id', userId).where('key', prefix).update({
-        visibility: visibilityState,
-        updatedAt: new Date(),
-      })
-      publish('object.events', {
-        type: 'object.file.visibility.updated',
-        payload: { userId: userId, filename: filename, visibility: visibilityState },
-      })
-      if (result.length > 0 && result[0] > 0) {
-        return {
-          key: filename,
-          message: ObjectResponseTypeSuccess.UpdateVisibilitySuccess,
-        }
-      }
+      return await changeVisibility(userId, params.id, visibilityState)
     } catch (e) {
+      if (e instanceof Error && e.message in ObjectResponseTypeError) {
+        return response.badRequest({ key: params.id, error: e })
+      }
     } finally {
-      return response.badRequest({ key: filename, error: ObjectResponseTypeError.IndexError })
+      return response.badRequest({ key: params.id, error: ObjectResponseTypeError.IndexError })
     }
   }
 
