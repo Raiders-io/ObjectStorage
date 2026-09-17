@@ -39,7 +39,7 @@ services:
 
   garage:
     container_name: object-storage
-    image: dxflrs/garage:v2.3.0
+    image: dxflrs/garage:v2.4.1
     command: /garage server --single-node --default-bucket
     environment:
       - GARAGE_DEFAULT_ACCESS_KEY=${GARAGE_DEFAULT_ACCESS_KEY:?}
@@ -59,7 +59,7 @@ services:
       # - "3902:3902"   # Host static web pages
       # - "3903:3903"   # Admin API + metrics
     healthcheck:
-      test: ["CMD", "/garage", "status"]
+      test: ["CMD", "/garage", "health"]
       interval: 10s
       timeout: 15s
       retries: 10
