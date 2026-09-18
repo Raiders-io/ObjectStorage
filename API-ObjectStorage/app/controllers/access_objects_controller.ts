@@ -210,11 +210,14 @@ export default class AccessObjectsController {
     }
     await QuotaTryToUpdate(userId, BigInt(file.size), BigInt(query.sizeBytes))
     await db.transaction(async () => {
-      await Object.query().where('owner_id', userId).where('key', prefix).update({
-        sizeBytes: file.size,
-        mimeType:  mime.lookup(filename) || file.type || 'application/octet-stream',
-        updatedAt: new Date(),
-      })
+      await Object.query()
+        .where('owner_id', userId)
+        .where('key', prefix)
+        .update({
+          sizeBytes: file.size,
+          mimeType: mime.lookup(filename) || file.type || 'application/octet-stream',
+          updatedAt: new Date(),
+        })
     })
 
     await file.moveToDisk(prefix, diskName)
@@ -268,11 +271,14 @@ export default class AccessObjectsController {
       }
       await QuotaTryToUpdate(userId, BigInt(file.size), BigInt(query.sizeBytes))
       await db.transaction(async () => {
-        await Object.query().where('owner_id', userId).where('key', prefix).update({
-          sizeBytes: file.size,
-          mimeType:  mime.lookup(filename) || file.type || 'application/octet-stream',
-          updatedAt: new Date(),
-        })
+        await Object.query()
+          .where('owner_id', userId)
+          .where('key', prefix)
+          .update({
+            sizeBytes: file.size,
+            mimeType: mime.lookup(filename) || file.type || 'application/octet-stream',
+            updatedAt: new Date(),
+          })
       })
 
       await file.moveToDisk(prefix, diskName)
@@ -479,8 +485,9 @@ export default class AccessObjectsController {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
     const payload = await request.validateUsing(searchFilesValidator)
-    if (!payload || payload?.files?.length === 0) return response.badRequest(ObjectResponseTypeError.NoFileProvided)
-    
+    if (!payload || payload?.files?.length === 0)
+      return response.badRequest(ObjectResponseTypeError.NoFileProvided)
+
     const requestedFiles = payload?.files
     const keyToFilename = new Map<string, string>()
     for (const file of requestedFiles) {
@@ -496,7 +503,7 @@ export default class AccessObjectsController {
       }
     }
     const sanitizedFiles = [...keyToFilename.keys()]
-     try {
+    try {
       const result = await Object.query()
         .where('owner_id', userId)
         .whereIn('key', sanitizedFiles)
@@ -505,13 +512,9 @@ export default class AccessObjectsController {
       if (!result) throw new Error('Index Query')
       const foundKeys = new Set(result.map((r) => r.key))
       return {
-        found: sanitizedFiles
-          .filter((k) => foundKeys.has(k))
-          .map((k) => keyToFilename.get(k)!),
-        notfound: sanitizedFiles
-          .filter((k) => !foundKeys.has(k))
-          .map((k) => keyToFilename.get(k)!),
-        }
+        found: sanitizedFiles.filter((k) => foundKeys.has(k)).map((k) => keyToFilename.get(k)!),
+        notfound: sanitizedFiles.filter((k) => !foundKeys.has(k)).map((k) => keyToFilename.get(k)!),
+      }
     } catch (error) {
       return response.badRequest(ObjectResponseTypeError.IndexError)
     }
