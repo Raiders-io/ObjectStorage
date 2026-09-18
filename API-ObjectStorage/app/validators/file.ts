@@ -22,3 +22,10 @@ export const FilesValidator = vine.create({
   files: vine.array(fileSchema).maxLength(10), // Max 10 files at once
 })
 export const MultipleFilesValidator = FilesValidator // Alias for better readability when validating multiple files
+
+/**
+ * Validator for search access-objects-controller
+ */
+export const searchFilesValidator = vine.create({
+  files: vine.array(vine.string()).minLength(1),
+})

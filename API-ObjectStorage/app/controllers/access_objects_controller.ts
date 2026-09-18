@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { FilesValidator, FileValidator } from '#validators/file'
+import { FilesValidator, FileValidator, searchFilesValidator } from '#validators/file'
 import Object from '#models/object'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import db from '@adonisjs/lucid/services/db'
@@ -478,12 +478,10 @@ export default class AccessObjectsController {
   async search({ request, response }: HttpContext) {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
-    let requestedFiles = request.input('files', '')
-    if (!requestedFiles || requestedFiles === '')
-      return response.badRequest({
-        key: 'files',
-        error: ObjectResponseTypeError.InvalidFilename,
-      })
+    const payload = await request.validateUsing(searchFilesValidator)
+    if (!payload || payload?.files?.length === 0) return response.badRequest(ObjectResponseTypeError.NoFileProvided)
+    
+    const requestedFiles = payload?.files
     const keyToFilename = new Map<string, string>()
     for (const file of requestedFiles) {
       const filename = sanitizeFilename(file)
