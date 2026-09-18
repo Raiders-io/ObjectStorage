@@ -1,0 +1,29 @@
+meta {
+  name: searchObjects
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/objects/search
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "files": [
+      "REadme.md",
+      "README.md",
+      "spec.pdf",
+      "spec.md",
+      "mix-mango-cherry.md",
+      "mix-mango-watermelon.md"
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

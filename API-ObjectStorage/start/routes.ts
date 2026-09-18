@@ -66,6 +66,7 @@ router
             router.put('/:id', [controllers.AccessObjects, 'update']).as('updateObject')
             router.delete('/:id', [controllers.AccessObjects, 'destroy']).as('deleteObject')
             router.patch('/:id', [controllers.AccessObjects, 'updateInfo']).as('updateObjectInfo')
+            router.post('/search', [controllers.AccessObjects, 'search']).as('searchObjects')
           })
           .prefix('/objects')
           .as('objects')
