@@ -4,8 +4,9 @@ import { QuotaTryToDownload } from '#services/quota'
 import { QuotaError } from '#class/quota'
 import { calculatePrefix, getDisk } from '#services/disk'
 import { sanitizeFilename } from '#services/sanitize-utils'
-import { StorageObjectUploadStatus } from '#enums/storage_objects'
+import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import { HttpContext } from '@adonisjs/core/http'
+import { ObjectResponseTypeError } from '#class/objects'
 
 export async function indexAll(
   userId: string
@@ -88,9 +89,12 @@ export const downloadLogic = async (
   const prefix = calculatePrefix(targetUserId, filename) // List only files for the authenticated user
   let object: Object | null = null
   if (targetUserId !== userId)
-    object = await Object.query().where('owner_id', userId).where('key', prefix).where('visibility', 'public').first()
-  else  
-    object = await Object.query().where('owner_id', userId).where('key', prefix).first()
+    object = await Object.query()
+      .where('owner_id', targetUserId)
+      .where('key', prefix)
+      .where('visibility', 'public')
+      .first()
+  else object = await Object.query().where('owner_id', userId).where('key', prefix).first()
   if (
     (object && object.status === StorageObjectUploadStatus.complete) ||
     (await getDisk().exists(prefix))
@@ -104,5 +108,52 @@ export const downloadLogic = async (
       response.header('Content-Type', 'application/octet-stream')
     }
     return response.stream(stream)
+  }
+}
+
+export const searchLogic = async (
+  userId: string,
+  targetUserId: string,
+  filenameArray: string[]
+) => {
+  if (!userId || userId === '') throw new Error('User ID not found in context')
+
+  if (!targetUserId || targetUserId === '') throw new Error('Target User ID not found in context')
+
+  const keyToFilename = new Map<string, string>()
+  for (const file of filenameArray) {
+    const filename = sanitizeFilename(file)
+    if (filename !== undefined) {
+      const prefix = calculatePrefix(targetUserId, filename)
+      keyToFilename.set(prefix, filename)
+    } else {
+      throw new Error(ObjectResponseTypeError.InvalidFilename)
+    }
+  }
+  const sanitizedFiles = [...keyToFilename.keys()]
+  try {
+    let result: { key: string }[] | null = null
+
+    if (targetUserId !== userId)
+      result = await Object.query()
+        .where('owner_id', targetUserId)
+        .where('visibility', StorageObjectVisibility.public)
+        .whereIn('key', sanitizedFiles)
+        .select('key')
+        .pojo<{ key: string }>()
+    else
+      result = await Object.query()
+        .where('owner_id', userId)
+        .whereIn('key', sanitizedFiles)
+        .select('key')
+        .pojo<{ key: string }>()
+    if (!result) throw new Error('Index Query')
+    const foundKeys = new Set(result.map((r) => r.key))
+    return {
+      found: sanitizedFiles.filter((k) => foundKeys.has(k)).map((k) => keyToFilename.get(k)!),
+      notfound: sanitizedFiles.filter((k) => !foundKeys.has(k)).map((k) => keyToFilename.get(k)!),
+    }
+  } catch (error) {
+    throw new Error(ObjectResponseTypeError.IndexError)
   }
 }

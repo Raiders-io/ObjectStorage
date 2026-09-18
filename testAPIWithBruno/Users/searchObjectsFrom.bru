@@ -1,0 +1,33 @@
+meta {
+  name: searchObjectsFrom
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{PROTOCOL}}://{{HOST}}:{{PORT}}/api/v1/storage/users/:userid/objects/search
+  body: json
+  auth: inherit
+}
+
+params:path {
+  userid: [user_id]
+}
+
+body:json {
+  {
+    "files": [
+      "REadme.md",
+      "README.md",
+      "spec.pdf",
+      "spec.md",
+      "mix-mango-cherry.md",
+      "mix-mango-watermelon.md"
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

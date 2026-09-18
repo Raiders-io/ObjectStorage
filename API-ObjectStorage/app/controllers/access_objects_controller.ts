@@ -21,7 +21,7 @@ import { getDisk, diskName, calculatePrefix } from '#services/disk'
 import { QuotaError } from '#class/quota'
 import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
 import { mime } from '@adonisjs/core/http/helpers'
-import { downloadLogic } from '#services/access_object_service'
+import { downloadLogic, searchLogic } from '#services/access_object_service'
 
 export default class AccessObjectsController {
   async index({
@@ -487,36 +487,33 @@ export default class AccessObjectsController {
     const payload = await request.validateUsing(searchFilesValidator)
     if (!payload || payload?.files?.length === 0)
       return response.badRequest(ObjectResponseTypeError.NoFileProvided)
-
     const requestedFiles = payload?.files
-    const keyToFilename = new Map<string, string>()
-    for (const file of requestedFiles) {
-      const filename = sanitizeFilename(file)
-      if (filename !== undefined) {
-        const prefix = calculatePrefix(userId, filename)
-        keyToFilename.set(prefix, filename)
-      } else {
-        return response.badRequest({
-          key: file,
-          error: ObjectResponseTypeError.InvalidFilename,
-        })
-      }
-    }
-    const sanitizedFiles = [...keyToFilename.keys()]
     try {
-      const result = await Object.query()
-        .where('owner_id', userId)
-        .whereIn('key', sanitizedFiles)
-        .select('key')
-        .pojo<{ key: string }>()
-      if (!result) throw new Error('Index Query')
-      const foundKeys = new Set(result.map((r) => r.key))
-      return {
-        found: sanitizedFiles.filter((k) => foundKeys.has(k)).map((k) => keyToFilename.get(k)!),
-        notfound: sanitizedFiles.filter((k) => !foundKeys.has(k)).map((k) => keyToFilename.get(k)!),
-      }
+      return await searchLogic(userId, userId, requestedFiles)
     } catch (error) {
-      return response.badRequest(ObjectResponseTypeError.IndexError)
+      return response.badRequest(error)
+    }
+  }
+
+  async searchFrom({ params, request, response }: HttpContext) {
+    const userId = request.ctx?.userId || ''
+    if (!userId || userId === '') throw new Error('User ID not found in context')
+    const payload = await request.validateUsing(searchFilesValidator)
+    if (!payload || payload?.files?.length === 0)
+      return response.badRequest(ObjectResponseTypeError.NoFileProvided)
+    const requestedFiles = payload?.files
+    let targetUser: string | undefined = undefined
+    if (params.userid) targetUser = sanitizeUserId(params.userid)
+    if (!params.userid || targetUser === undefined) {
+      return response.badRequest({
+        key: 'userid',
+        error: ObjectResponseTypeError.InvalidUserID,
+      })
+    }
+    try {
+      return await searchLogic(userId, targetUser, requestedFiles)
+    } catch (error) {
+      return response.badRequest(error)
     }
   }
 }

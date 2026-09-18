@@ -83,6 +83,9 @@ router
             router
               .get('/:userid/objects/preview/:id', [controllers.AccessObjects, 'previewFrom'])
               .as('previewObjectFrom')
+            router
+              .post('/:userid/objects/search', [controllers.AccessObjects, 'searchFrom'])
+              .as('searchObjectFrom')
           })
           .prefix('/users')
           .as('users')
