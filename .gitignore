@@ -27,8 +27,6 @@ yarn-error.log
 
 # Garage Specific
 garage-data
-# Configuration file, do not commit with real credentials
-*garage.toml
 
 # Ignore AWS CLI credentials file, which may contain real credentials
 .aws/credentials

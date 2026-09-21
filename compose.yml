@@ -46,6 +46,9 @@ services:
       - GARAGE_DEFAULT_SECRET_KEY=${GARAGE_DEFAULT_SECRET_KEY:?}
       - GARAGE_DEFAULT_BUCKET=${GARAGE_DEFAULT_BUCKET:?}
       - GARAGE_RUST_LOG=${GARAGE_RUST_LOG:?}
+      - GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN:?}
+      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET:?}
+      - GARAGE_METRICS_TOKEN=${GARAGE_METRICS_TOKEN:?}
     volumes:
       - object-storage-data:/var/lib/garage/data
       - object-storage-meta:/var/lib/garage/meta
