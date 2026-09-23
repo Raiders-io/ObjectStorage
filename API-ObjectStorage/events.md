@@ -20,8 +20,8 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
+  filename: string,
+  userId: uuid,
 }
 ```
 
@@ -33,8 +33,8 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
+  filename: string,
+  userId: uuid,
 }
 ```
 
@@ -46,8 +46,8 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
+  filename: string,
+  userId: uuid,
 }
 ```
 
@@ -59,9 +59,9 @@ payload :
 
 ```json
 {
-  filename: filename,
-  userId: user-id,
-  visibility: new-visiblity,
+  filename: string,
+  userId: uuid,
+  visibility: 'public' | 'private' | 'shared',
 }
 ```
 
@@ -74,6 +74,6 @@ payload :
 ```json
 {
   userId: user-id,
-  state: requested | deleted,
+  state: 'requested' | 'deleted',
 }
 ```
