@@ -5,7 +5,7 @@ Design choices :
 - Simple : quick to develop and easier to maintain
 - Complete : more complex, but better scalability
 
-> At this time, only the simple design is made as it's easier to deploy and maintain on a small scale. For a large number of users, The file validator built-in Adonis will be too slow and use too much resources. It is also not verifying for any illegal contents or viruses. 
+> At this time, only the simple design is made as it's easier to deploy and maintain on a small scale. For a large number of users, The file validator built-in Adonis will be too slow and use too much resources. It is also not verifying for any illegal contents or viruses.
 
 ## Simple
 
@@ -36,10 +36,11 @@ sequenceDiagram
 ## Complete
 
 Validation made by a worker, faster as multiple workers can be invoked.
-Better scalability, but increased resource consumption (RAM and CPU) under low load. It would perform     API_object->>User: Give presigned URL
+Better scalability, but increased resource consumption (RAM and CPU) under low load. It would perform API_object->>User: Give presigned URL
 significantly better under a huge load than the simple design.
 
 Notes :
+
 > Worker should be automatically triggered if `POST /uploads/{id}/complete` is never called after a timeout
 
 ```mermaid

@@ -40,6 +40,9 @@ router.get('/', () => {
  * Starts with /users
  * - Read:   GET    /:userid/objects/
  * - Read:   GET    /:userid/objects/:id
+ * - Read:   GET    /:userid/objects/preview/:id
+ * - Search: POST   /:userid/objects/search
+ * Only authenticated users can access these routes, but for now we will leave them open for testing purposes.
  */
 /**
  * Starts with /quota

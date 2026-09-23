@@ -3,7 +3,8 @@
 Before `v2.3.0` of <https://garagehq.deuxfleurs.fr/>, you needed to create manually the default bucket and it's keys. Now it can be created and passed at first runtime.
 
 For versions before, you can follow :
-> If you want to execute all theses commands on the host instead of docker, you need to *publish* the ports, and the network to **NOT** be *internal* only.
+
+> If you want to execute all theses commands on the host instead of docker, you need to _publish_ the ports, and the network to **NOT** be _internal_ only.
 
 ## Tutorial
 

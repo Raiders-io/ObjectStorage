@@ -9,17 +9,33 @@ The project is divided in 3 softwares :
 - `PostgreSQL`
   - metadata of files and additionnal informations of owners on theses files.
   - user quotas (upload/download limit, number of files, max storage use...)
-  - rules over files permissions (public, private, shared accross a team)
 
 ## Documentation
 
 See the [README.md in API-ObjectStorage/](API-ObjectStorage/README.md).
+For documentation of :
+
+- Architecture of project : [arch.md](Arch/arch.md)
+- Database Schema : [database.md](Arch/database.md)
+- Quota implementation : [quotas.md](Arch/quotas.md)
+
+## Features
+
+- API for manipulating safely an object storage solution like S3
+- use of Garage, free and open-source implementation of AWS S3 and MinIO
+- testing unit via Bruno
 
 ## Installation
 
 You will need to fill all the missing variables in the `.env` file. Some are described in the following tutorial and some have directly instruction in the `.env.example` file.
 
 If you wish to setup all the `.env` vars directly, we advise you to use this command :
+
+```sh
+make env
+```
+
+or
 
 ```sh
 chmod +x ./setup_env.sh && ./setup_env.sh
@@ -32,9 +48,9 @@ If you want to setup manually the variables, you can use the following :
 Firstly you need to generate an `APP_KEY` for Adonis to encrypt data and create session tokens. You will need to generate (or replace) the Garage Secrets. You simply need to execute the following :
 
 ```bash
-cd API-ObjectStorage/ 
-npm ci >/dev/null 
-cp .env.example ../.env 
+cd API-ObjectStorage/
+npm ci >/dev/null
+cp .env.example ../.env
 sed -i "s|^\(APP_KEY=\).*|\1$(node ace generate:key --show | awk '{print $3}')|" ../.env
 cd -
 sed -i "s|^\(GARAGE_DEFAULT_SECRET_KEY=\).*|\1$(openssl rand -hex 32)|" .env
@@ -53,27 +69,9 @@ cd -
 - `APP_KEY` : needs to be generated using the command `node ace generate:key`
 - `GARAGE_DEFAULT_ACCESS_KEY` : needs to be generated using the command `openssl rand -hex 16`
 - `GARAGE_DEFAULT_SECRET_KEY` : needs to be generated using the command `openssl rand -hex 32`
-
-### ObjectStorage (Garage)
-
-You will need to execute the following to generate the `garage.toml` configuration file.
-
-```bash
-cd Garage/
-chmod +x ./generate_config.sh
-./generate_config.sh
-cd -
-```
-
-- `rpc_secret` : secret for communication between Garage nodes
-- `admin_token` : token for admin api access
-- `metrics_token` : token for metrics access
-
-#### Generation
-
-- `rpc_secret` : needs to be generated using the command `openssl rand -hex 32`
-- `admin_token` : needs to be generated using the command `openssl rand -hex 32`
-- `metrics_token` : needs to be generated using the command `openssl rand -hex 32`
+- `GARAGE_ADMIN_TOKEN` : needs to be generated using the command `openssl rand -base64 32`
+- `GARAGE_RPC_SECRET` : needs to be generated using the command `openssl rand -hex 32`
+- `GARAGE_METRICS_TOKEN` : needs to be generated using the command `openssl rand -base64 32`
 
 ---
 

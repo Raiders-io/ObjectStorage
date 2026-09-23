@@ -16,34 +16,36 @@ Rules :
 
 ### Starts with `/objects`
 
-- Create: `POST   /`
-- Read: `GET    /`
-- Read: `GET    /:id`
-- Read: `GET    /preview/:id`
-- Update: `PUT    /:id`
-- Update: `PUT    /` (bulk update)
+- Create: `POST /`
+- Read: `GET /`
+- Read: `GET /:id`
+- Read: `GET /preview/:id`
+- Update: `PUT /:id`
+- Update: `PUT /` (bulk update)
 - Delete: `DELETE /:id`
 - Delete: `DELETE /` (bulk delete)
-- Patch: `PATCH  /:id` (update partially)
+- Patch: `PATCH /:id` (update partially)
 
 ### Starts with `/users`
 
-- Read: `GET    /:userid/objects/`
-- Read: `GET    /:userid/objects/:id`
+- Read: `GET /:userid/objects/`
+- Read: `GET /:userid/objects/:id`
+- Read: `GET /:userid/objects/preview/:id`
+- Read: `POST /:userid/objects/search`
 
 ### Starts with `/quota`
 
-- Read: `GET    /`
+- Read: `GET /`
 
 ### Starts with `/all` (GRPD compliant)
 
-- Read: `GET    /`
-- Delete: `Delete /`
+- Read: `GET /`
+- Delete: `DELETE /`
 
 ## Documentation
 
 > It may not be updated to the latest update. Don't hesitate to make an issue if something is not working as described.
 
-## Other Routes:
+## Other Routes
 
 See the project [BrunAuth](https://github.com/Raiders-io/BrunAuth) for testing the Auth API using already prepared requests.

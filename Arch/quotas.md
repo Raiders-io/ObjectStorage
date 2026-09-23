@@ -1,7 +1,8 @@
 # Quotas
 
-Quotas contains Users's statistics of their usage of this API. 
+Quotas contains Users's statistics of their usage of this API.
 It handles:
+
 - the number of different files (a huge number of small files can be heavier on disk than some big files).
 - A maximum allowed storage space by user, and rate limit of actions on theses objects, download and upload.
 

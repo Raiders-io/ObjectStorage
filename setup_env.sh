@@ -28,8 +28,6 @@ create_env()
 	cp .env.example ../.env 
 	sed -i "s|^\(APP_KEY=\).*|\1$(node ace generate:key --show | awk '{print $3}')|" ../.env
 	cd -
-	sed -i "s|^\(GARAGE_DEFAULT_SECRET_KEY=\).*|\1$(openssl rand -hex 32)|" .env
-	sed -i "s|^\(GARAGE_DEFAULT_ACCESS_KEY=\).*|\1$(openssl rand -hex 16)|" .env
 }
 
 configure_postgres()
@@ -63,6 +61,8 @@ configure_postgres()
 
 configure_garage()
 {
+	sed -i "s|^\(GARAGE_DEFAULT_SECRET_KEY=\).*|\1$(openssl rand -hex 32)|" .env
+	sed -i "s|^\(GARAGE_DEFAULT_ACCESS_KEY=\).*|\1$(openssl rand -hex 16)|" .env
 	sed -i "s|^\(GARAGE_RPC_SECRET=\).*|\1$(openssl rand -hex 32)|" .env
 	sed -i "s|^\(GARAGE_ADMIN_TOKEN=\).*|\1$(openssl rand -base64 32)|" .env
 	sed -i "s|^\(GARAGE_METRICS_TOKEN=\).*|\1$(openssl rand -base64 32)|" .env
