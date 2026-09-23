@@ -24,7 +24,11 @@ export async function handleAsyncMessage(msg: ApiEvent<any>) {
       const result = LessonFileAttachedEvent.safeParse(msg)
       if (!result.success) throw new MsgMinorError('Invalid payload for lesson.file.attached event')
       const payload = result.data.payload
-      await changeVisibility(payload.authorId, payload.filename, StorageObjectVisibility.public)
+      if (payload.filename instanceof Array) {
+        for (const filename of payload.filename)
+          await changeVisibility(payload.authorId, filename, StorageObjectVisibility.public)
+      } else
+        await changeVisibility(payload.authorId, payload.filename, StorageObjectVisibility.public)
       break
     }
     default:
