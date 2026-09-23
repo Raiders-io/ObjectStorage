@@ -1,6 +1,7 @@
 import { handleAsyncMessage } from '#services/message_broker_service'
 import type { ApplicationService } from '@adonisjs/core/types'
 import { Broker, publish, consume, LOGLEVEL } from '@yosone/broker'
+import { ObjectStartedEvent } from '#class/events'
 
 export default class MessageBrokerProvider {
   constructor(protected app: ApplicationService) {}
@@ -26,12 +27,13 @@ export default class MessageBrokerProvider {
       logLevel: LOGLEVEL.INFO,
     })
 
-    publish('object.events', {
+    const event: ObjectStartedEvent = {
       type: 'object.started',
       payload: {
         message: 'Object service has been started',
       },
-    })
+    }
+    publish('object.events', event)
   }
   /**
    * The process has been started

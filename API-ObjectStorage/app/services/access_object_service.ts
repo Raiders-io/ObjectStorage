@@ -8,6 +8,7 @@ import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/stora
 import { HttpContext } from '@adonisjs/core/http'
 import { ObjectResponseTypeError, ObjectResponseTypeSuccess, ObjectSuccess } from '#class/objects'
 import { publish } from '@yosone/broker'
+import { ObjectFileVisibilityUpdatedEvent } from '#class/events'
 
 export async function indexAll(
   userId: string
@@ -177,10 +178,15 @@ export async function changeVisibility(
       .where('owner_id', userId)
       .where('key', prefix)
       .update({ visibility: visibilityState })
-    publish('object.events', {
+    const event: ObjectFileVisibilityUpdatedEvent = {
       type: 'object.file.visibility.updated',
-      payload: { userId: userId, filename: filename, visibility: visibilityState },
-    })
+      payload: {
+        userId: userId,
+        filename: filename,
+        visibility: visibilityState,
+      },
+    }
+    publish('object.events', event)
     if (result.length > 0 && result[0] > 0) {
       return {
         key: filename,

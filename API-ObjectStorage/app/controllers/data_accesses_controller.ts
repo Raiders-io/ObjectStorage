@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { indexAll, deleteAllObjectsForUser } from '#services/access_object_service'
 import { publish } from '@yosone/broker'
+import { ObjectUserDataEvent } from '#class/events'
 
 export default class DataAccessesController {
   /**
@@ -11,10 +12,14 @@ export default class DataAccessesController {
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
     const res = await indexAll(userId)
-    publish('object.events', {
+    const event: ObjectUserDataEvent = {
       type: 'object.user.data',
-      payload: { userId: userId, state: 'requested' },
-    })
+      payload: {
+        userId: userId,
+        state: 'requested',
+      },
+    }
+    publish('object.events', event)
     if (res.status === 'ok') return response.ok(res)
     else return response.abort(res)
   }
@@ -27,10 +32,14 @@ export default class DataAccessesController {
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
     const res = await deleteAllObjectsForUser(userId)
-    publish('object.events', {
+    const event: ObjectUserDataEvent = {
       type: 'object.user.data',
-      payload: { userId: userId, state: 'deleted' },
-    })
+      payload: {
+        userId: userId,
+        state: 'deleted',
+      },
+    }
+    publish('object.events', event)
     if (res.status === 'ok') return response.ok(res)
     else return response.abort(res)
   }

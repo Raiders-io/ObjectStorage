@@ -3,14 +3,30 @@
 Events followed :
 
 - `auth.user.deleted`
+- `lesson.file.attached`
 
 Events created :
 
+- `object.started`
 - `object.file.created`
 - `object.file.updated`
 - `object.file.deleted`
 - `object.file.visibility.updated`
 - `object.user.data`
+
+For more informations, you can look directly for the Zod Schema implementation in `app/class/events.ts`.
+
+## `object.started`
+
+Published when the service started.
+
+payload :
+
+```json
+{
+  message: string,
+}
+```
 
 ## `object.file.created`
 
