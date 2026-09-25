@@ -44,6 +44,7 @@ router.use([
  * the routes or the routes group.
  */
 export const middleware = router.named({
+  monitoringToken: () => import('#middleware/monitoring_token_middleware'),
   verifyToken: () => import('#middleware/verify_token_middleware'),
   cleanupUploads: () => import('#middleware/cleanup_uploads_middleware'),
 })

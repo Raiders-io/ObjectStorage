@@ -60,6 +60,7 @@ router
         router.get('/live', [controllers.HealthChecks, 'live'])
         router.get('/ready', [controllers.HealthChecks, 'ready'])
       })
+      .use(middleware.monitoringToken())
       .prefix('/health')
       .as('health')
 
