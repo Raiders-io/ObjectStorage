@@ -57,6 +57,14 @@ router
   .group(() => {
     router
       .group(() => {
+        router.get('/live', [controllers.HealthChecks, 'live'])
+        router.get('/ready', [controllers.HealthChecks, 'ready'])
+      })
+      .prefix('/health')
+      .as('health')
+
+    router
+      .group(() => {
         // Basics routes for objects
         router
           .group(() => {
