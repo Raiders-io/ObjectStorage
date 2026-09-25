@@ -71,6 +71,7 @@
     "@aws-sdk/client-s3": "^3.1047.0",
     "@aws-sdk/s3-request-presigner": "^3.1047.0",
     "@japa/api-client": "^3.2.1",
+    "@julr/adonisjs-prometheus": "^2.1.0",
     "@tuyau/core": "^1.2.2",
     "@vinejs/vine": "^4.3.1",
     "better-sqlite3": "^12.9.0",
