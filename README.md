@@ -24,6 +24,7 @@ For documentation of :
 - Architecture of project : [arch.md](Arch/arch.md)
 - Database Schema : [database.md](Arch/database.md)
 - Quota implementation : [quotas.md](Arch/quotas.md)
+- Events for Message Broker : [events.md](API-ObjectStorage/events.md)
 
 ## Features
 
