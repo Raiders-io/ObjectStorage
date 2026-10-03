@@ -1,5 +1,11 @@
 # ObjectStorage
 
+## Context
+
+_This project has been created as part of the 42 curriculum by ppontet._
+
+## Introduction
+
 This project is a service for the project [Transcendence](https://github.com/Raiders-io/Transcendence). It regroups all the needs to use an object storage (like AWS S3) as storage for all the files. It's currently the best solution for scalability, data availability, security and high performance.
 
 The project is divided in 3 softwares :
@@ -24,6 +30,10 @@ For documentation of :
 - API for manipulating safely an object storage solution like S3
 - use of Garage, free and open-source implementation of AWS S3 and MinIO
 - testing unit via Bruno
+
+## AI / LLM Usage
+
+Only LLM's such as ChatGPT, Claude, or DeepSeek has been used for review and for how API's should be designed in the context a Node server. Also how javascript handles works for `await` and `async`.
 
 ## Installation
 
