@@ -28,6 +28,7 @@ For documentation of :
 ## Features
 
 - API for manipulating safely an object storage solution like S3
+- quota implementation for storage limits defined at User Level
 - use of Garage, free and open-source implementation of AWS S3 and MinIO
 - testing unit via Bruno
 
