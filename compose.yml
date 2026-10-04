@@ -5,6 +5,9 @@ services:
     build:
       context: ./API-ObjectStorage
       target: production # production or dev
+      args:
+        - DEV_BASE: ${DEV_BASE:-node:24.16.0-alpine3.24} #dev node base image
+        - PRODUCTION_BASE: ${PRODUCTION_BASE:-} # use dhi.io/node:24-alpine as hardened image
     image: object-api:local
     environment:
       - API_PORT=3333

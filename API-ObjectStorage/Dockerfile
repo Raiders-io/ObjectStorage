@@ -1,4 +1,7 @@
-FROM node:24.16.0-alpine3.24 AS base
+ARG DEV_BASE=node:24.16.0-alpine3.24
+ARG PRODUCTION_BASE=${DEV_BASE}
+
+FROM ${DEV_BASE} AS base
 
 WORKDIR /app
 
@@ -30,14 +33,13 @@ FROM deps AS build
 
 COPY . .
 RUN node ace build
-# Remove dev dependencies after build to reduce image size
 COPY package*.json ./
 RUN npm ci --omit=dev
 
 # ----------------------------
 # Stage : Production runtime
 # ----------------------------
-FROM dhi.io/node:24-alpine AS production
+FROM ${PRODUCTION_BASE} AS production
 ENV NODE_ENV=production
 
 COPY --from=build /app/build ./
