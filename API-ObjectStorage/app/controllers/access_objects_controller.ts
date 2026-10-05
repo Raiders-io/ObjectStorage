@@ -415,7 +415,6 @@ export default class AccessObjectsController {
       if (e instanceof Error && e.message in ObjectResponseTypeError) {
         return response.badRequest({ key: params.id, error: e })
       }
-    } finally {
       return response.badRequest({ key: params.id, error: ObjectResponseTypeError.IndexError })
     }
   }
