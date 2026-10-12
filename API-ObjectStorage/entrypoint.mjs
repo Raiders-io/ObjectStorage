@@ -1,6 +1,25 @@
 import { spawnSync, spawn } from 'node:child_process'
 
 /**
+ * 0. Load secrets from Vault if VAULT_ADDR is set
+ *    This must happen before migration to have DB credentials
+ */
+if (process.env.VAULT_ADDR) {
+  console.log('[Entrypoint] Loading secrets from Vault...')
+  const vaultLoader = spawnSync(process.execPath, ['bin/vault-loader.js'], {
+    stdio: 'inherit',
+  })
+
+  if (vaultLoader.status !== 0) {
+    console.error('[Entrypoint] Vault loader failed, exiting...')
+    process.exit(vaultLoader.status ?? 1)
+  }
+  console.log('[Entrypoint] Secrets loaded from Vault')
+} else {
+  console.log('[Entrypoint] VAULT_ADDR not set, using environment variables directly')
+}
+
+/**
  * 1. Start blocking migration ,logs to stdout/stderr
  *   (equivalent to `npm run migration-force`)
  */

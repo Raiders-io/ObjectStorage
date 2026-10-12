@@ -1,31 +1,56 @@
 name: objectstorage
 services:
+  vault:
+    container_name: object-vault
+    image: hashicorp/vault:1.16.0
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN_ID:?}
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    volumes:
+      - vault-data:/vault/file
+      - ./vault/config.hcl:/vault/config/config.hcl
+      - ./vault/policies:/vault/policies
+    networks:
+      - basic-network
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/config.hcl
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+
   object-api:
     container_name: object-api
     build:
       context: ./API-ObjectStorage
-      target: production # production or dev
+      target: production
     image: object-api:local
     environment:
       - API_PORT=3333
       - HOST=${HOST:?}
       - LOG_LEVEL=${LOG_LEVEL:?}
-      - APP_KEY=${APP_KEY:?}
+      - VAULT_KEY=${VAULT_KEY:-root}
+      - VAULT_ADDR=http://vault:8200
+      - VAULT_PATH=secret/objectstorage
       - APP_URL=${APP_URL:?}
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:?}
       - SESSION_DRIVER=${SESSION_DRIVER:?}
       - DRIVE_DISK=${DRIVE_DISK:?}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?}
       - AWS_REGION=${AWS_REGION:?}
       - S3_BUCKET=${S3_BUCKET:?}
       - S3_ENDPOINT=${S3_ENDPOINT:?}
       - POSTGRES_SERVICE_NAME=${POSTGRES_SERVICE_NAME:?}
       - POSTGRES_PORT=${POSTGRES_PORT:?}
-      - POSTGRES_USER=${POSTGRES_USER:?}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
       - POSTGRES_DB=${POSTGRES_DB:?}
     depends_on:
+      vault:
+        condition: service_healthy
       postgresql:
         condition: service_healthy
       garage:
@@ -57,11 +82,6 @@ services:
     networks:
       - basic-network
       - monitoring-network
-    # ports:
-    #   - "3900:3900" # S3 API
-    #   - "3901:3901" # RPC inter-nodes (here single-node, so not needed)
-    #   - "3902:3902" # Host static web pages
-    #   - "3903:3903" # Admin API + metrics
     healthcheck:
       test: ["CMD", "/garage", "health"]
       interval: 5s
@@ -75,16 +95,14 @@ services:
     image: postgres:18.4-alpine3.23
     environment:
       - POSTGRES_DB=${POSTGRES_DB:?}
-      - POSTGRES_USER=${POSTGRES_USER:?}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     volumes:
       - object-db-data:/var/lib/postgresql/18/docker
     networks:
       - basic-network
-    # ports:
-    #   - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 30s
       retries: 10
@@ -104,3 +122,4 @@ volumes:
   object-db-data:
   object-storage-data:
   object-storage-meta:
+  vault-data:
