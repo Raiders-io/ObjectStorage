@@ -47,6 +47,6 @@ export default class MessageBrokerProvider {
    * Preparing to shutdown the app
    */
   async shutdown() {
-    Broker.disconnect()
+    Broker.shutdown()
   }
 }

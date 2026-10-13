@@ -27,7 +27,7 @@ create_env()
 
 configure_app_key()
 {
-	sed -i "s|^\(APP_KEY=\).*|\1$(openssl rand -base64 32 | tr -dc '[:alnum:]' | head -c 32)|" ../.env
+	sed -i "s|^\(APP_KEY=\).*|\1$(openssl rand -base64 32 | tr -dc '[:alnum:]' | head -c 32)|" ./.env
 }
 
 configure_postgres()
