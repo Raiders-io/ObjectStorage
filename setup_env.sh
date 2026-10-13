@@ -72,6 +72,28 @@ configure_consumer_id()
 	sed -i "s|^\(CONSUMER_ID=\).*|\1$(openssl rand -hex 4)|" .env
 }
 
+configure_hashicorp_vault()
+{
+	export $(grep APP_KEY .env)
+	export $(grep AWS_ACCESS_KEY_ID .env)
+    export $(grep AWS_SECRET_ACCESS_KEY .env)
+    export $(grep POSTGRES_USER .env)
+    export $(grep POSTGRES_PASSWORD  .env)
+	# docker exec -i \
+	# 	-e APP_KEY=${APP_KEY} \
+	# 	-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+	# 	-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+	# 	-e POSTGRES_USER=${POSTGRES_USER} \
+	# 	-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+	# 	object-vault \
+	# 	vault kv put secret/object \
+	# 		APP_KEY=${APP_KEY} \
+	# 		AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+	# 		AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+	# 		POSTGRES_USER=${POSTGRES_USER} \
+	# 		POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+}
+
 check_flags() {
 	while [[ "$#" -gt 0 ]]; do
 		case $1 in
@@ -106,10 +128,11 @@ if [ "$HELP" = true ]; then
 	exit 0
 fi
 
-create_env
-configure_app_key
-configure_postgres
-configure_garage
-configure_consumer_id
+# create_env
+# configure_app_key
+# configure_postgres
+# configure_garage
+# configure_consumer_id
+configure_hashicorp_vault
 
 echo "Environment setup complete. Please review the .env file and make any necessary adjustments."
