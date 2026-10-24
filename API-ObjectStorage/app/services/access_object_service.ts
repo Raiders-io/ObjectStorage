@@ -71,7 +71,6 @@ export async function deleteAllObjectsForUser(
   }
   return res
 }
-
 export const downloadLogic = async (
   userId: string,
   targetUserId: string,
@@ -80,37 +79,39 @@ export const downloadLogic = async (
   response: HttpContext['response']
 ) => {
   if (!userId || userId === '') throw new Error('User ID not found in context')
+  if (!targetUserId || targetUserId === '') throw new Error('Target User ID not found in context')
+
+  const filename = sanitizeFilename(objectId)
+  if (filename === undefined) throw new Error(ObjectResponseTypeError.InvalidFilename)
+  const prefix = calculatePrefix(targetUserId, filename)
+
+  const query = Object.query()
+    .where('owner_id', targetUserId)
+    .where('key', prefix)
+    .where('status', StorageObjectUploadStatus.complete)
+  if (targetUserId !== userId) query.where('visibility', StorageObjectVisibility.public)
+
+  const object = await query.first()
+  if (!object) {
+    return response.notFound({ key: filename, error: ObjectResponseTypeError.NotFound })
+  }
+
   try {
     await QuotaTryToDownload(userId)
   } catch (error) {
     console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
     throw new Error(QuotaError.NoDownloadRemaining)
   }
-  if (!targetUserId || targetUserId === '') throw new Error('Target User ID not found in context')
-  const filename = sanitizeFilename(objectId)
-  const prefix = calculatePrefix(targetUserId, filename) // List only files for the authenticated user
-  let object: Object | null = null
-  if (targetUserId !== userId)
-    object = await Object.query()
-      .where('owner_id', targetUserId)
-      .where('key', prefix)
-      .where('visibility', 'public')
-      .first()
-  else object = await Object.query().where('owner_id', userId).where('key', prefix).first()
-  if (
-    (object && object.status === StorageObjectUploadStatus.complete) ||
-    (await getDisk().exists(prefix))
-  ) {
-    const stream = await getDisk().getStream(prefix)
-    if (wantInline) {
-      response.header('Content-Disposition', 'inline')
-      response.header('Content-Type', object?.mimeType || 'application/pdf')
-    } else {
-      response.header('Content-Disposition', `attachment; filename="${filename}"`)
-      response.header('Content-Type', 'application/octet-stream')
-    }
-    return response.stream(stream)
+
+  const stream = await getDisk().getStream(prefix)
+  if (wantInline) {
+    response.header('Content-Disposition', 'inline')
+    response.header('Content-Type', object.mimeType)
+  } else {
+    response.header('Content-Disposition', `attachment; filename="${filename}"`)
+    response.header('Content-Type', 'application/octet-stream')
   }
+  return response.stream(stream)
 }
 
 export const searchLogic = async (
