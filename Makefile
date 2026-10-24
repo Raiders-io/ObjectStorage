@@ -26,6 +26,9 @@ up:
 down:
 	docker compose down
 
+down-v:
+	docker compose down -v
+
 save:
 	docker run --rm -v objectstorage_object-storage-data:/volume_storage-data -v $(shell pwd):/backup ubuntu tar cvf /backup/backup_storage-data.tar /volume_storage-data
 	docker run --rm -v objectstorage_object-storage-meta:/volume_storage-meta -v $(shell pwd):/backup ubuntu tar cvf /backup/backup_storage-meta.tar /volume_storage-meta
