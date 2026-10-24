@@ -37,7 +37,7 @@ Rules :
 
 - Read: `GET /`
 
-### Starts with `/all` (GRPD compliant)
+### Starts with `/all` (GDPR compliant)
 
 - Read: `GET /`
 - Delete: `DELETE /`

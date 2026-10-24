@@ -21,7 +21,7 @@
 - `object.file.visibility.updated`
 - `object.user.data`
 
-For more informations, you can look directly for the Zod Schema implementation in `app/class/events.ts`.
+For more informations, you can look directly for the VineJs implementation in `app/class/events.ts`.
 
 ## `object.started`
 
