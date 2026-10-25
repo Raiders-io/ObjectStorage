@@ -3,17 +3,87 @@ name: Docker Image CI
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
-
-  build:
-
+  validate:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: cd API-ObjectStorage && docker build . --file Dockerfile --target production --tag my-image-name:$(date +%s)
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: API-ObjectStorage/package-lock.json
+
+      - name: Install dependencies
+        working-directory: API-ObjectStorage
+        run: npm ci
+
+      - name: Run lint
+        working-directory: API-ObjectStorage
+        run: npm run lint
+
+      - name: Check types
+        working-directory: API-ObjectStorage
+        run: npm run typecheck
+
+      - name: Build application
+        working-directory: API-ObjectStorage
+        run: npm run build
+
+      - name: Build Docker image without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: API-ObjectStorage
+          file: API-ObjectStorage/Dockerfile
+          target: production
+          push: false
+          tags: object-api:pr-${{ github.event.pull_request.number || github.run_number }}
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=main
+
+      - name: Build and publish Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: API-ObjectStorage
+          file: API-ObjectStorage/Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
