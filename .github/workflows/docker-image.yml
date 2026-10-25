@@ -2,6 +2,12 @@ name: Docker Image CI
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the image to GHCR
+        required: true
+        type: boolean
+        default: false
   push:
     branches: [main]
   pull_request:
@@ -51,7 +57,10 @@ jobs:
           tags: object-api:pr-${{ github.event.pull_request.number || github.run_number }}
 
   publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' && inputs.publish == true)
     needs: validate
     runs-on: ubuntu-latest
     permissions:
