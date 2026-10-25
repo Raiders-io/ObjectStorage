@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import { InferInput } from '@vinejs/vine/types'
+import { type InferInput } from '@vinejs/vine/types'
 
 export const ObjectStartedEvent = vine.create({
   type: vine.literal('object.started'),

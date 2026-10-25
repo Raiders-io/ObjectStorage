@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { indexAll, deleteAllObjectsForUser } from '#services/access_object_service'
 import { publish } from '@yosone/broker'
-import { ObjectUserDataEvent } from '#validators/event'
+import { type ObjectUserDataEvent } from '#validators/event'
 
 export default class DataAccessesController {
   /**

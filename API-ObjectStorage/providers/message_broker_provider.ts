@@ -1,7 +1,7 @@
 import { handleAsyncMessage } from '#services/message_broker_service'
 import type { ApplicationService } from '@adonisjs/core/types'
 import { Broker, publish, consume, LOGLEVEL } from '@yosone/broker'
-import { ObjectStartedEvent } from '#validators/event'
+import { type ObjectStartedEvent } from '#validators/event'
 
 export default class MessageBrokerProvider {
   constructor(protected app: ApplicationService) {}

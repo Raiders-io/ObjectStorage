@@ -3,12 +3,16 @@ import Quota from '#models/quota'
 import { QuotaTryToDownload } from '#services/quota'
 import { QuotaError } from '#class/quota'
 import { calculatePrefix, getDisk } from '#services/disk'
-import { sanitizeFilename } from '#services/sanitize-utils'
+import { sanitizeFilename } from '#services/sanitize_utils'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
-import { HttpContext } from '@adonisjs/core/http'
-import { ObjectResponseTypeError, ObjectResponseTypeSuccess, ObjectSuccess } from '#class/objects'
+import { type HttpContext } from '@adonisjs/core/http'
+import {
+  ObjectResponseTypeError,
+  ObjectResponseTypeSuccess,
+  type ObjectSuccess,
+} from '#class/objects'
 import { publish } from '@yosone/broker'
-import { ObjectFileVisibilityUpdatedEvent } from '#validators/event'
+import { type ObjectFileVisibilityUpdatedEvent } from '#validators/event'
 
 export async function indexAll(
   userId: string

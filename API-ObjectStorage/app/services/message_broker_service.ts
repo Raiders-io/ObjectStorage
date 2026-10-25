@@ -4,7 +4,7 @@ import { MsgMinorError, publish, type ApiEvent } from '@yosone/broker'
 import {
   AuthUserDeletedEvent,
   LessonFileAttachedEvent,
-  ObjectUserDataEvent,
+  type ObjectUserDataEvent,
 } from '#validators/event'
 
 type ValidationResult<T> = { success: true; data: T } | { success: false; error: unknown }
@@ -47,7 +47,7 @@ export async function handleAsyncMessage(msg: ApiEvent<any>) {
       const result = await safeParse(LessonFileAttachedEvent, msg)
       if (!result.success) throw new MsgMinorError('Invalid payload for lesson.file.attached event')
       const payload = result.data.payload
-      if (payload.filename instanceof Array) {
+      if (Array.isArray(payload.filename)) {
         for (const filename of payload.filename)
           await changeVisibility(payload.authorId, filename, StorageObjectVisibility.public)
       } else
