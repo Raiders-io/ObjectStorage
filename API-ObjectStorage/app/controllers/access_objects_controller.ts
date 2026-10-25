@@ -19,11 +19,11 @@ import {
 import { getDisk, diskName, calculatePrefix } from '#services/disk'
 
 import { QuotaError } from '#class/quota'
-import { sanitizeFilename, sanitizeUserId } from '#services/sanitize-utils'
+import { sanitizeFilename, sanitizeUserId } from '#services/sanitize_utils'
 import { mime } from '@adonisjs/core/http/helpers'
 import { downloadLogic, searchLogic, changeVisibility } from '#services/access_object_service'
 import { publish } from '@yosone/broker'
-import {
+import type {
   ObjectFileCreatedEvent,
   ObjectFileDeletedEvent,
   ObjectFileUpdatedEvent,
@@ -481,7 +481,7 @@ export default class AccessObjectsController {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
-    let targetUser: string | undefined = undefined
+    let targetUser: string | undefined
     if (params.userid) targetUser = sanitizeUserId(params.userid)
     if (!params.userid || !params.id || targetUser === undefined) {
       return response.badRequest({
@@ -517,7 +517,7 @@ export default class AccessObjectsController {
     if (!payload || payload?.files?.length === 0)
       return response.badRequest(ObjectResponseTypeError.NoFileProvided)
     const requestedFiles = payload?.files
-    let targetUser: string | undefined = undefined
+    let targetUser: string | undefined
     if (params.userid) targetUser = sanitizeUserId(params.userid)
     if (!params.userid || targetUser === undefined) {
       return response.badRequest({

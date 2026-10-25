@@ -6,7 +6,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-  
+
       table.uuid('user_id').notNullable().unique()
       table.bigInteger('storage_bytes').unsigned().notNullable().defaultTo(0)
       table.bigInteger('storage_bytes_limit').unsigned().notNullable().defaultTo(1073741824) // 1 GB //TODO : Make this configurable per user
@@ -25,7 +25,11 @@ export default class extends BaseSchema {
       table.timestamp('updated_at').notNullable().defaultTo(this.now())
 
       table.check('storage_bytes >= 0 AND object_count >= 0', [], 'user_quotas_usage_non_negative')
-      table.check('download_count >= 0 AND upload_count >= 0', [], 'user_quotas_counts_non_negative')
+      table.check(
+        'download_count >= 0 AND upload_count >= 0',
+        [],
+        'user_quotas_counts_non_negative'
+      )
     })
   }
 
