@@ -47,4 +47,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   POSTGRES_USER: Env.schema.string(),
   POSTGRES_PASSWORD: Env.schema.string(),
   POSTGRES_DB: Env.schema.string(),
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the Message Broker
+  |----------------------------------------------------------
+  */
+  REDIS_URL: Env.schema.string(),
+  CONSUMER_ID: Env.schema.string(),
 })

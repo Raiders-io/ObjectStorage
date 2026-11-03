@@ -21,9 +21,9 @@ export default class MessageBrokerProvider {
    */
   async start() {
     Broker.init({
-      redisUrl: process.env.REDIS_URL || 'redis://redis:6379',
+      redisUrl: process.env.REDIS_URL,
       group: 'object-service',
-      consumer: 'object-service',
+      consumer: `object-service-${process.env.CONSUMER_ID}`,
       logLevel: LOGLEVEL.INFO,
     })
 

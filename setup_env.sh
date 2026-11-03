@@ -67,6 +67,10 @@ configure_garage()
 	sed -i "s|^\(GARAGE_ADMIN_TOKEN=\).*|\1$(openssl rand -base64 32)|" .env
 	sed -i "s|^\(GARAGE_METRICS_TOKEN=\).*|\1$(openssl rand -base64 32)|" .env
 }
+configure_consumer_id()
+{
+	sed -i "s|^\(CONSUMER_ID=\).*|\1$(openssl rand -hex 4)|" .env
+}
 
 check_flags() {
 	while [[ "$#" -gt 0 ]]; do
@@ -106,5 +110,6 @@ create_env
 configure_app_key
 configure_postgres
 configure_garage
+configure_consumer_id
 
 echo "Environment setup complete. Please review the .env file and make any necessary adjustments."
