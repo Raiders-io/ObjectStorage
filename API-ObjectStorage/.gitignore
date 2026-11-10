@@ -1,29 +1,14 @@
-# Dependencies and AdonisJS build
 node_modules
-build
+dist
 tmp/*
 !tmp/.gitkeep
-
-# Secrets
 .env
 .env.local
-.env.production.local
-.env.development.local
-
-# Frontend assets compiled code
-public/assets
-
-# Build tools specific
+.env.*.local
+*.tsbuildinfo
 npm-debug.log
-yarn-error.log
-
-# Editors specific
-.fleet
 .idea
 .vscode
-
-# Platform specific
 .DS_Store
-
-# Folder to store uploaded files, do not commit with real files
+# Local fs disk (DRIVE_DISK=fs), do not commit real files
 storage

@@ -15,13 +15,10 @@ RUN npm ci
 FROM deps AS dev
 ENV NODE_ENV=development
 
-COPY ./startup.sh /
-RUN chmod +x /startup.sh
-
 COPY . .
 
-ENTRYPOINT ["/startup.sh"]
-CMD ["npm", "run", "dev"]
+# Migrations are run by the app itself at boot (TypeORM `migrationsRun`)
+CMD ["npm", "run", "start:dev"]
 
 # ----------------------------
 # Stage : Build the application
@@ -29,9 +26,8 @@ CMD ["npm", "run", "dev"]
 FROM deps AS build
 
 COPY . .
-RUN node ace build
+RUN npm run build
 # Remove dev dependencies after build to reduce image size
-COPY package*.json ./
 RUN npm ci --omit=dev
 
 # ----------------------------
@@ -39,9 +35,11 @@ RUN npm ci --omit=dev
 # ----------------------------
 FROM dhi.io/node:24-alpine AS production
 ENV NODE_ENV=production
+WORKDIR /app
 
-COPY --from=build /app/build ./
+# package.json is required at runtime: it carries "type": "module"
+COPY --from=build /app/package.json ./
+COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
-COPY entrypoint.mjs ./
 
-ENTRYPOINT ["node", "entrypoint.mjs"]
+ENTRYPOINT ["node", "dist/main.js"]
