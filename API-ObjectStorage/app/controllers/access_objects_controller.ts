@@ -1,5 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { FilesValidator, FileValidator, searchFilesValidator } from '#validators/file'
+import {
+  FilesValidator,
+  FileValidator,
+  searchFilesValidator,
+  searchQueryValidator,
+} from '#validators/file'
 import Object from '#models/object'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
 import db from '@adonisjs/lucid/services/db'
@@ -19,7 +24,7 @@ import {
 import { getDisk, diskName, calculatePrefix } from '#services/disk'
 
 import { QuotaError } from '#class/quota'
-import { sanitizeFilename, sanitizeUserId } from '#services/sanitize_utils'
+import { sanitizeFilename, sanitizeUserId, searchToIlikePattern } from '#services/sanitize_utils'
 import { mime } from '@adonisjs/core/http/helpers'
 import { downloadLogic, searchLogic, changeVisibility } from '#services/access_object_service'
 import { publish } from '@yosone/broker'
@@ -45,8 +50,11 @@ export default class AccessObjectsController {
     else if (limit > 100) limit = 100
 
     try {
-      const result = await Object.query()
-        .where('owner_id', userId)
+      const payload = await request.validateUsing(searchQueryValidator)
+      const search = payload.q
+      let query = Object.query().where('owner_id', userId)
+      if (search) query = query.where('name', 'ilike', `%${searchToIlikePattern(search)}%`)
+      const result = await query
         .select('name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
@@ -442,8 +450,11 @@ export default class AccessObjectsController {
     if (limit < 0) limit = 1
     else if (limit > 100) limit = 100
     try {
-      const result = await Object.query()
-        .where('owner_id', targetUser)
+      const payload = await request.validateUsing(searchQueryValidator)
+      const search = payload.q
+      let query = Object.query().where('owner_id', targetUser)
+      if (search) query = query.where('name', 'ilike', `%${searchToIlikePattern(search)}%`)
+      const result = await query
         .where('visibility', 'public')
         .select('name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')

@@ -12,3 +12,12 @@ export function sanitizeFilename(filename: string): string | undefined {
 export function sanitizeUserId(userId: string): string | undefined {
   return sanitizeFilename(userId)
 }
+
+/**
+ * Converts a user search term into an ILIKE pattern.
+ * '*' is the only accepted wildcard and becomes '%',
+ * every other wildcard or escape character is escaped literally
+ */
+export function searchToIlikePattern(search: string): string {
+  return search.replace(/[\\%_]/g, '\\$&').replace(/\*/g, '%')
+}

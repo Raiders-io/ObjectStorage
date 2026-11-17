@@ -29,3 +29,17 @@ export const MultipleFilesValidator = FilesValidator // Alias for better readabi
 export const searchFilesValidator = vine.create({
   files: vine.array(vine.string()).minLength(1),
 })
+
+/**
+ * Validator for the optional search query ?q=
+ * '*' is the only accepted wildcard, LIKE wildcards '%', '_' and the
+ * escape character '\' are rejected
+ */
+export const searchQueryValidator = vine.create({
+  q: vine
+    .string()
+    .trim()
+    .maxLength(100)
+    .regex(/^[^%_\\]*$/)
+    .optional(),
+})
