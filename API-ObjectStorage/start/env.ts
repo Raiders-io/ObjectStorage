@@ -23,9 +23,6 @@ export default await Env.create(new URL('../', import.meta.url), {
   APP_URL: Env.schema.string({ format: 'url', tld: false }),
   AUTH_SERVICE_URL: Env.schema.string({ format: 'url', tld: false }),
 
-  // Session
-  SESSION_DRIVER: Env.schema.enum(['cookie', 'memory', 'database'] as const),
-
   /*
   |----------------------------------------------------------
   | Variables for configuring the drive package

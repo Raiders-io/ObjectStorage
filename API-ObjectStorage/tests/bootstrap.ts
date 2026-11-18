@@ -5,7 +5,6 @@ import type { Config } from '@japa/runner/types'
 import { pluginAdonisJS } from '@japa/plugin-adonisjs'
 import { dbAssertions } from '@adonisjs/lucid/plugins/db'
 import testUtils from '@adonisjs/core/services/test_utils'
-import { sessionApiClient } from '@adonisjs/session/plugins/api_client'
 import type { Registry } from '../.adonisjs/client/registry/schema.js'
 
 /**
@@ -28,7 +27,6 @@ export const plugins: Config['plugins'] = [
   pluginAdonisJS(app),
   dbAssertions(app),
   apiClient(),
-  sessionApiClient(app),
 ]
 
 /**

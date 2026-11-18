@@ -2,12 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import {
   FilesValidator,
   FileValidator,
+  destroyFilesValidator,
   searchFilesValidator,
   searchQueryValidator,
+  updateInfoValidator,
 } from '#validators/file'
 import Object from '#models/object'
 import { StorageObjectUploadStatus, StorageObjectVisibility } from '#enums/storage_objects'
-import db from '@adonisjs/lucid/services/db'
 import {
   QuotaVerifyForUpdate,
   QuotaTryToUpload,
@@ -68,6 +69,7 @@ export default class AccessObjectsController {
   async store({
     request,
     response,
+    logger,
   }: HttpContext): Promise<
     { objects: (ObjectError | ObjectSuccess)[] } | { __response: string; __status: number }
   > {
@@ -105,24 +107,18 @@ export default class AccessObjectsController {
         await QuotaTryToUpload(userId, BigInt(file.size))
       } catch (error) {
         objects.addError({ key: fileName, error: QuotaError.NoUploadRemaining })
-        console.log(`QuotaTryToUpload from ${userId} error:`, (error as Error).message)
+        logger.error({ userId }, 'QuotaTryToUpload failed: %s', (error as Error).message)
         continue
       }
 
-      const fileSave = await db.transaction(async (trx): Promise<boolean> => {
-        await Object.create(
-          {
-            ownerId: userId,
-            key: s3Path,
-            name: fileName,
-            sizeBytes: file.size,
-            mimeType: mime.lookup(fileName) || file.type || 'application/octet-stream',
-            visibility: StorageObjectVisibility.private,
-            status: StorageObjectUploadStatus.uploading,
-          },
-          { client: trx }
-        )
-        return true
+      const fileSave = await Object.create({
+        ownerId: userId,
+        key: s3Path,
+        name: fileName,
+        sizeBytes: file.size,
+        mimeType: mime.lookup(fileName) || file.type || 'application/octet-stream',
+        visibility: StorageObjectVisibility.private,
+        status: StorageObjectUploadStatus.uploading,
       })
       if (!fileSave) {
         objects.addError({ key: s3Path, error: ObjectResponseTypeError.FailedToSaveFile })
@@ -130,15 +126,11 @@ export default class AccessObjectsController {
       }
       try {
         await file.moveToDisk(s3Path, diskName)
-        await db.transaction(async () => {
-          await Object.query().where('owner_id', userId).where('key', s3Path).update({
-            status: StorageObjectUploadStatus.complete,
-          })
+        await Object.query().where('owner_id', userId).where('key', s3Path).update({
+          status: StorageObjectUploadStatus.complete,
         })
       } catch (error) {
-        await db.transaction(async () => {
-          await Object.query().where('owner_id', userId).where('key', s3Path).delete()
-        })
+        await Object.query().where('owner_id', userId).where('key', s3Path).delete()
         objects.addError({ key: s3Path, error: ObjectResponseTypeError.UploadError })
         continue
       }
@@ -176,7 +168,7 @@ export default class AccessObjectsController {
     }
   }
 
-  async update({ params, request, response }: HttpContext) {
+  async update({ params, request, response, logger }: HttpContext) {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
@@ -208,7 +200,7 @@ export default class AccessObjectsController {
     try {
       await QuotaVerifyForUpdate(userId, BigInt(file.size))
     } catch (error) {
-      console.log('QuotaVerifyForUpdate error:', (error as Error).message)
+      logger.error({ userId }, 'QuotaVerifyForUpdate failed: %s', (error as Error).message)
       return response.badRequest({
         key: filename,
         error: QuotaError.NoUpdateRemaining,
@@ -228,16 +220,14 @@ export default class AccessObjectsController {
       })
     }
     await QuotaTryToUpdate(userId, BigInt(file.size), BigInt(query.sizeBytes))
-    await db.transaction(async () => {
-      await Object.query()
-        .where('owner_id', userId)
-        .where('key', prefix)
-        .update({
-          sizeBytes: file.size,
-          mimeType: mime.lookup(filename) || file.type || 'application/octet-stream',
-          updatedAt: new Date(),
-        })
-    })
+    await Object.query()
+      .where('owner_id', userId)
+      .where('key', prefix)
+      .update({
+        sizeBytes: file.size,
+        mimeType: mime.lookup(filename) || file.type || 'application/octet-stream',
+        updatedAt: new Date(),
+      })
 
     await file.moveToDisk(prefix, diskName)
 
@@ -252,7 +242,7 @@ export default class AccessObjectsController {
     }
   }
 
-  async updateMany({ request, response }: HttpContext) {
+  async updateMany({ request, response, logger }: HttpContext) {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
@@ -279,7 +269,7 @@ export default class AccessObjectsController {
         await QuotaVerifyForUpdate(userId, BigInt(file.size))
       } catch (error) {
         objects.addError({ key: filename, error: QuotaError.NoUpdateRemaining })
-        console.log(`QuotaVerifyForUpdate from ${userId} error:`, (error as Error).message)
+        logger.error({ userId }, 'QuotaVerifyForUpdate failed: %s', (error as Error).message)
         continue
       }
 
@@ -294,16 +284,14 @@ export default class AccessObjectsController {
         continue
       }
       await QuotaTryToUpdate(userId, BigInt(file.size), BigInt(query.sizeBytes))
-      await db.transaction(async () => {
-        await Object.query()
-          .where('owner_id', userId)
-          .where('key', prefix)
-          .update({
-            sizeBytes: file.size,
-            mimeType: mime.lookup(filename) || file.type || 'application/octet-stream',
-            updatedAt: new Date(),
-          })
-      })
+      await Object.query()
+        .where('owner_id', userId)
+        .where('key', prefix)
+        .update({
+          sizeBytes: file.size,
+          mimeType: mime.lookup(filename) || file.type || 'application/octet-stream',
+          updatedAt: new Date(),
+        })
       const event: ObjectFileUpdatedEvent = {
         type: 'object.file.updated',
         payload: { userId: userId, filename: file.clientName },
@@ -317,7 +305,7 @@ export default class AccessObjectsController {
     return { objects: objects.get() }
   }
 
-  async destroy({ params, request, response }: HttpContext) {
+  async destroy({ params, request, response, logger }: HttpContext) {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
@@ -340,7 +328,7 @@ export default class AccessObjectsController {
     try {
       await QuotaTryToDelete(userId, BigInt(query.sizeBytes))
     } catch (error) {
-      console.log(`QuotaTryToDelete from ${userId} error:`, (error as Error).message)
+      logger.error({ userId }, 'QuotaTryToDelete failed: %s', (error as Error).message)
       return response.badRequest(QuotaError.QuotaDeleteFailed)
     }
     await getDisk().delete(prefix)
@@ -356,18 +344,12 @@ export default class AccessObjectsController {
     })
   }
 
-  async destroyMany({ request, response }: HttpContext) {
+  async destroyMany({ request, response, logger }: HttpContext) {
     const userId = request.ctx?.userId || ''
     if (!userId || userId === '') throw new Error('User ID not found in context')
 
-    const ids = request.input('ids') as string[] | undefined
-
-    if (!ids || ids.length === 0) {
-      return response.badRequest({
-        key: 'ids',
-        error: ObjectResponseTypeError.NoFileID,
-      })
-    }
+    const payload = await request.validateUsing(destroyFilesValidator)
+    const ids = payload.ids
 
     const objects = new ObjectResponseType()
 
@@ -389,7 +371,7 @@ export default class AccessObjectsController {
       try {
         await QuotaTryToDelete(userId, BigInt(query.sizeBytes))
       } catch (error) {
-        console.log(`QuotaTryToDelete from ${userId} error:`, (error as Error).message)
+        logger.error({ userId }, 'QuotaTryToDelete failed: %s', (error as Error).message)
         return response.badRequest({
           key: 'ids',
           error: QuotaError.QuotaDeleteFailed,
@@ -416,7 +398,9 @@ export default class AccessObjectsController {
     if (params.id === undefined) {
       return response.badRequest({ key: 'file?', error: ObjectResponseTypeError.NoFileID })
     }
-    const visibilityState = request.input('visibility', StorageObjectVisibility.private)
+    const payload = await request.validateUsing(updateInfoValidator)
+    const visibilityState = (payload.visibility ??
+      StorageObjectVisibility.private) as StorageObjectVisibility
     try {
       return await changeVisibility(userId, params.id, visibilityState)
     } catch (e) {
@@ -455,7 +439,7 @@ export default class AccessObjectsController {
       let query = Object.query().where('owner_id', targetUser)
       if (search) query = query.where('name', 'ilike', `%${searchToIlikePattern(search)}%`)
       const result = await query
-        .where('visibility', 'public')
+        .where('visibility', StorageObjectVisibility.public)
         .select('name', 'size_bytes', 'mime_type', 'visibility', 'created_at')
         .orderBy('created_at', 'desc')
         .paginate(page, limit)

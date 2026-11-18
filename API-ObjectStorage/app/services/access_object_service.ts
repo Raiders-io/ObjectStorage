@@ -12,6 +12,7 @@ import {
   type ObjectSuccess,
 } from '#class/objects'
 import { publish } from '@yosone/broker'
+import logger from '@adonisjs/core/services/logger'
 import { type ObjectFileVisibilityUpdatedEvent } from '#validators/event'
 
 export async function indexAll(
@@ -103,7 +104,7 @@ export const downloadLogic = async (
   try {
     await QuotaTryToDownload(userId)
   } catch (error) {
-    console.log(`QuotaTryToDownload from ${userId} error:`, (error as Error).message)
+    logger.error({ userId }, 'QuotaTryToDownload failed: %s', (error as Error).message)
     throw new Error(QuotaError.NoDownloadRemaining)
   }
 
