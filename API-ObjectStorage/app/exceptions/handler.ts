@@ -1,5 +1,6 @@
 import app from '@adonisjs/core/services/app'
 import { type HttpContext, ExceptionHandler } from '@adonisjs/core/http'
+import { errors as vineErrors } from '@vinejs/vine'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
@@ -13,6 +14,13 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
+    // Validation failures: render the field-level details but with a
+    // framework-neutral message and status, so the response does not
+    // identify AdonisJS/VineJS to clients
+    if (error instanceof vineErrors.E_VALIDATION_ERROR) {
+      const details = error.messages
+      return ctx.response.status(422).send({ message: 'Validation failed', errors: details })
+    }
     return super.handle(error, ctx)
   }
 

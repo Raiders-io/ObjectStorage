@@ -50,9 +50,9 @@ export default class AccessObjectsController {
     if (limit < 0) limit = 1
     else if (limit > 100) limit = 100
 
+    const payload = await request.validateUsing(searchQueryValidator)
+    const search = payload.q
     try {
-      const payload = await request.validateUsing(searchQueryValidator)
-      const search = payload.q
       let query = Object.query().where('owner_id', userId)
       if (search) query = query.where('name', 'ilike', `%${searchToIlikePattern(search)}%`)
       const result = await query
@@ -449,9 +449,9 @@ export default class AccessObjectsController {
     let limit = request.input('limit', 10)
     if (limit < 0) limit = 1
     else if (limit > 100) limit = 100
+    const payload = await request.validateUsing(searchQueryValidator)
+    const search = payload.q
     try {
-      const payload = await request.validateUsing(searchQueryValidator)
-      const search = payload.q
       let query = Object.query().where('owner_id', targetUser)
       if (search) query = query.where('name', 'ilike', `%${searchToIlikePattern(search)}%`)
       const result = await query
