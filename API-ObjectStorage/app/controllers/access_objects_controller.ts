@@ -84,24 +84,40 @@ export default class AccessObjectsController {
 
     const objects = new ObjectResponseType()
 
-    for (const file of payload.files) {
+    // Sanitize and compute paths once, in file order, then check
+    // existing keys in a single query instead of one per file (N+1)
+    const entries = payload.files.map((file) => {
       const fileName = sanitizeFilename(file.clientName)
-      if (fileName === undefined && payload.files.length === 1)
-        return response.badRequest(ObjectResponseTypeError.InvalidFilename)
+      if (fileName === undefined) return { file, fileName: undefined, s3Path: undefined }
+      return { file, fileName, s3Path: calculatePrefix(userId, fileName) }
+    })
+    const candidatePaths = entries
+      .map((entry) => entry.s3Path)
+      .filter((path): path is string => path !== undefined)
+    const existingKeys = new Set<string>()
+    if (candidatePaths.length > 0) {
+      const rows = await Object.query()
+        .where('owner_id', userId)
+        .whereIn('key', candidatePaths)
+        .select('key')
+        .pojo<{ key: string }>()
+      for (const row of rows) existingKeys.add(row.key)
+    }
+    const pendingKeys = new Set<string>()
 
-      if (fileName === undefined) {
+    for (const { file, fileName, s3Path } of entries) {
+      if (s3Path === undefined || fileName === undefined) {
+        if (payload.files.length === 1)
+          return response.badRequest(ObjectResponseTypeError.InvalidFilename)
         objects.addError({ key: file.clientName, error: ObjectResponseTypeError.NoFileID })
         continue
       }
-      const s3Path = `files/${userId}/${fileName}`
 
-      if (
-        (await Object.query().where('owner_id', userId).where('key', s3Path).first()) ||
-        (await getDisk().exists(s3Path))
-      ) {
+      if (existingKeys.has(s3Path) || pendingKeys.has(s3Path) || (await getDisk().exists(s3Path))) {
         objects.addError({ key: s3Path, error: ObjectResponseTypeError.UploadAlreadyExists })
         continue
       }
+      pendingKeys.add(s3Path)
 
       try {
         await QuotaTryToUpload(userId, BigInt(file.size))
